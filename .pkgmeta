@@ -1,0 +1,21 @@
+package-as: Seramate
+
+# The repo root is the "Seramate" addon; each per-region data addon is a subfolder that
+# the packager promotes to a top-level sibling folder inside the single release zip.
+move-folders:
+  Seramate/Seramate_DB_US: Seramate_DB_US
+  Seramate/Seramate_DB_EU: Seramate_DB_EU
+
+# Repo-only files that must not ship inside the addon.
+ignore:
+  - README.md
+  - CHANGELOG.md
+  - "*.md"
+  - .github
+  - .luacheckrc
+  - tests
+  - tools
+  - docs
+
+# No embedded libraries — the addon uses only Blizzard APIs.
+enable-nolib-creation: no

@@ -1,0 +1,24 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+.vscode/
+*.swp
+
+# WoW addon packager output (BigWigs packager / CurseForge)
+/.release/
+*.zip
+
+# Generated bundled databases (large; fetched from R2 at release time).
+# Keep the addon layout but never commit the multi-MB generated Lua data.
+/Seramate_DB_*/**/*_HORDE.lua
+/Seramate_DB_*/**/*_ALLIANCE.lua
+
+# Lua build artifacts
+luac.out
+*.luac
+
+# Local scratch data pulled for testing
+/manifest.json

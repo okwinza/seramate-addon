@@ -1,0 +1,11 @@
+## Interface: 120000
+## Title: Seramate DB (US)
+## Notes: Bundled US PvP rating database for Seramate.
+## Author: Seramate
+## Version: @project-version@
+## LoadOnDemand: 1
+## Dependencies: Seramate
+## DefaultState: enabled
+
+US_HORDE.lua
+US_ALLIANCE.lua

@@ -1,0 +1,162 @@
+name: Refresh data and release
+
+# Triggers:
+#   - schedule:            daily at 05:15 UTC — the actual mechanism (the backend publishes to
+#                          R2 at 05:00). The sha256 change-gate makes it a no-op when unchanged.
+#   - workflow_dispatch:   manual "Run workflow" button (force re-release available).
+#   - repository_dispatch: reserved for immediate release-on-publish, but the backend does NOT
+#                          fire it yet, so it is currently inert.
+# Any dispatch client_payload is intentionally ignored — the manifest is always re-fetched
+# from R2 as the source of truth, so a spoofed payload cannot influence what ships.
+on:
+  repository_dispatch:
+    types: [r2-data-updated]
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Release even if the data is unchanged"
+        type: boolean
+        default: false
+  schedule:
+    - cron: '15 5 * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: seramate-release
+  cancel-in-progress: false
+
+jobs:
+  refresh-and-release:
+    runs-on: ubuntu-latest
+    env:
+      R2_BASE: ${{ vars.R2_BASE }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate config
+        run: |
+          if [ -z "${R2_BASE:-}" ]; then
+            echo "::error::Repository variable R2_BASE is not set (e.g. https://data.seramate.com)."
+            exit 1
+          fi
+
+      # R2 sits behind Cloudflare, which caches manifest.json and the *.lua data objects
+      # independently. Since the backend overwrites those stable keys in place, the edge can
+      # serve a stale manifest paired with fresh data (or vice-versa) — the sha256 gate then
+      # fails on a mismatch. We read every R2 object origin-fresh by appending a per-run
+      # cache-buster ($CB) to the URL, so the whole set comes from one coherent generation.
+      - name: Fetch manifest and gate on change
+        id: gate
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          FORCE: ${{ github.event.inputs.force }}
+          CB: ${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          curl -sSfL -H 'Cache-Control: no-cache' "$R2_BASE/addon/db/manifest.json?cb=$CB" -o new-manifest.json
+          new_sha=$(jq -r '[.files[].sha256] | sort | join("")' new-manifest.json | sha256sum | cut -d' ' -f1)
+          echo "new combined sha: $new_sha"
+
+          old_sha=""
+          if gh release download --pattern manifest.json --dir prev 2>/dev/null; then
+            old_sha=$(jq -r '[.files[].sha256] | sort | join("")' prev/manifest.json | sha256sum | cut -d' ' -f1)
+            echo "previous combined sha: $old_sha"
+          else
+            echo "no previous release manifest found"
+          fi
+
+          if [ "$new_sha" = "$old_sha" ] && [ "${FORCE:-false}" != "true" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "Data unchanged; nothing to release."
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "ver=$(date -u +%Y.%m.%d)" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Pull data files from R2
+        if: steps.gate.outputs.changed == 'true'
+        env:
+          CB: ${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          jq -r '.files[] | [.stem, .key, .sha256] | @tsv' new-manifest.json |
+          while IFS=$'\t' read -r stem key sha; do
+            region="${stem%%_*}"
+            dest="Seramate_DB_${region}/${stem}.lua"
+            mkdir -p "Seramate_DB_${region}"
+            curl -sSfL -H 'Cache-Control: no-cache' "$R2_BASE/$key?cb=$CB" -o "$dest"
+            got=$(sha256sum "$dest" | cut -d' ' -f1)
+            if [ "$got" != "$sha" ]; then
+              echo "::error::sha256 mismatch for $key ($got != $sha)"
+              exit 1
+            fi
+            echo "fetched $dest"
+          done
+
+      # The packager ships git-tracked files only (untracked files are auto-ignored), so the
+      # fetched data must be staged. We stage without committing — the multi-MB data never
+      # enters git history; the tag points at the code commit and the packager reads the
+      # data from the working tree + index.
+      - name: Stage fetched data for packaging
+        if: steps.gate.outputs.changed == 'true'
+        run: git add -f Seramate_DB_*/*.lua
+
+      - name: Tag data snapshot
+        if: steps.gate.outputs.changed == 'true'
+        id: tag
+        env:
+          VER: ${{ steps.gate.outputs.ver }}
+        run: |
+          set -euo pipefail
+          base="v${VER}"
+          tag="$base"
+          n=1
+          while git rev-parse -q --verify "refs/tags/$tag" >/dev/null; do
+            n=$((n + 1))
+            tag="${base}.${n}"
+          done
+          git config user.name "seramate-bot"
+          git config user.email "bot@seramate.com"
+          git tag "$tag"
+          git push origin "refs/tags/$tag"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "Tagged $tag"
+
+      - name: Package and release
+        if: steps.gate.outputs.changed == 'true'
+        uses: BigWigsMods/packager@v2
+        env:
+          GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}
+          CF_API_KEY: ${{ secrets.CF_API_KEY }}
+          WOWI_API_TOKEN: ${{ secrets.WOWI_API_TOKEN }}
+          WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
+
+      # Override the packager's commit-derived changelog with a deterministic, manifest-driven
+      # body: cron releases run unattended, so notes must be clean without hand-editing. Values
+      # come from our own R2 manifest (backend-generated ints/date), read into quoted vars.
+      - name: Write clean release notes
+        if: steps.gate.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          season=$(jq -r '.season' new-manifest.json)
+          cutoff=$(jq -r '.cutoff' new-manifest.json)
+          date=$(jq -r '.generatedAt' new-manifest.json | cut -dT -f1)
+          printf 'Bundled PvP rating snapshot — season %s, updated %s.\n\nRatings and notable titles for **EU and US** characters at **%s+** in any bracket this season (2v2 / 3v3 / Rated Battlegrounds).\n\nUnzip the three folders into Interface/AddOns/ and reload.\n' "$season" "$date" "$cutoff" > notes.md
+          gh release edit "$TAG" --notes-file notes.md
+
+      - name: Attach manifest to the release
+        if: steps.gate.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          cp new-manifest.json manifest.json
+          gh release upload "$TAG" manifest.json --clobber

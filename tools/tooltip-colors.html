@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Seramate Tooltip Colors</title>
+<style>
+  :root {
+    --bg: #14161a;
+    --panel: #1c1f26;
+    --panel-2: #23272f;
+    --line: #2e333d;
+    --text: #e7e9ee;
+    --muted: #9aa2b1;
+    --accent: #2ec7b8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 14px/1.5 -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  header.top {
+    display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap;
+    padding: 18px 24px; border-bottom: 1px solid var(--line);
+    position: sticky; top: 0; background: var(--bg); z-index: 5;
+  }
+  header.top h1 { margin: 0; font-size: 17px; letter-spacing: .2px; }
+  header.top h1 span { color: var(--accent); }
+  header.top .sub { color: var(--muted); font-size: 13px; }
+  header.top .actions { margin-left: auto; display: flex; gap: 8px; }
+  button {
+    font: inherit; color: var(--text); background: var(--panel-2);
+    border: 1px solid var(--line); border-radius: 7px; padding: 7px 13px;
+    cursor: pointer; transition: border-color .12s, background .12s;
+  }
+  button:hover { border-color: #3d4552; background: #262b33; }
+  button.primary { border-color: #2b6f68; background: #17342f; color: #a8efe4; }
+  button.primary:hover { background: #1c3f39; border-color: #38867d; }
+
+  main {
+    display: grid; grid-template-columns: minmax(360px, 460px) 1fr;
+    gap: 24px; padding: 24px; align-items: start;
+  }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+
+  /* ---- preview ---- */
+  .preview-wrap { position: sticky; top: 86px; }
+  .preview-label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .8px; margin: 0 0 10px; }
+  .tooltip {
+    background: #05070d;
+    border: 1px solid #2a2f3a;
+    border-radius: 5px;
+    padding: 12px 14px 14px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.02);
+    font-family: "Trebuchet MS", Verdana, sans-serif;
+    font-size: 15px; line-height: 1.42;
+    min-height: 120px;
+  }
+  .tt-line { white-space: pre; }
+  .tt-row { display: flex; justify-content: space-between; gap: 24px; }
+  .tt-row .r { font-variant-numeric: tabular-nums; }
+  .tt-header { font-weight: 700; }
+  .tt-native { opacity: .6; }
+  .tt-blank { height: 8px; }
+  .tt-indent { padding-left: 6px; }
+  .bg-note { color: var(--muted); font-size: 12px; margin-top: 10px; }
+  .bg-note code { color: #c7ccd6; }
+
+  /* ---- controls ---- */
+  .group { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; margin-bottom: 16px; overflow: hidden; }
+  .group > h2 {
+    margin: 0; padding: 12px 16px; font-size: 12px; letter-spacing: .8px;
+    text-transform: uppercase; color: var(--muted); background: var(--panel-2);
+    border-bottom: 1px solid var(--line);
+  }
+  .ctl { display: grid; grid-template-columns: 40px 96px 1fr; align-items: center; gap: 12px; padding: 10px 16px; }
+  .ctl + .ctl { border-top: 1px solid #23262e; }
+  .ctl input[type=color] {
+    -webkit-appearance: none; appearance: none; width: 40px; height: 28px;
+    border: 1px solid var(--line); border-radius: 6px; background: none; cursor: pointer; padding: 0;
+  }
+  .ctl input[type=color]::-webkit-color-swatch-wrapper { padding: 2px; }
+  .ctl input[type=color]::-webkit-color-swatch { border: none; border-radius: 4px; }
+  .ctl input[type=text] {
+    font: 13px ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    color: var(--text); background: #12141a; border: 1px solid var(--line);
+    border-radius: 6px; padding: 6px 8px; width: 100%; text-transform: lowercase;
+  }
+  .ctl input[type=text].bad { border-color: #a23b3b; }
+  .ctl .meta { min-width: 0; }
+  .ctl .meta .name { font-weight: 600; }
+  .ctl .meta .desc { color: var(--muted); font-size: 12px; }
+
+  /* ---- export ---- */
+  .export { padding: 0 24px 32px; }
+  .export .tabs { display: flex; gap: 8px; margin-bottom: 10px; align-items: center; }
+  .export .tabs .spacer { flex: 1; }
+  .export pre {
+    margin: 0; background: #0e1016; border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 16px; overflow: auto; max-height: 360px;
+    font: 12.5px/1.55 ui-monospace, "SF Mono", Menlo, Consolas, monospace; color: #cdd3de;
+  }
+  .export .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { .export .cols { grid-template-columns: 1fr; } }
+  .export h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin: 0 0 8px; display: flex; align-items: center; gap: 10px; }
+  .export h3 button { padding: 3px 9px; font-size: 12px; }
+  .import textarea {
+    width: 100%; min-height: 84px; resize: vertical; margin-top: 6px;
+    font: 12.5px ui-monospace, Menlo, Consolas, monospace; color: var(--text);
+    background: #0e1016; border: 1px solid var(--line); border-radius: 10px; padding: 12px;
+  }
+  .import .msg { font-size: 12px; margin-top: 6px; min-height: 16px; }
+  .import .msg.ok { color: #4bd0a0; }
+  .import .msg.err { color: #e0716f; }
+</style>
+</head>
+<body>
+<header class="top">
+  <h1><span>Seramate</span> Tooltip Colors</h1>
+  <div class="sub">Edit each element, copy the map, apply in the addon.</div>
+  <div class="actions">
+    <button id="reset">Reset to defaults</button>
+    <button id="copy-lua" class="primary">Copy Lua map</button>
+  </div>
+</header>
+
+<main>
+  <section class="preview-wrap">
+    <p class="preview-label">Live preview</p>
+    <div class="tooltip" id="preview"></div>
+    <p class="bg-note">The dimmed top lines are WoW's own tooltip (not editable); the blank below is Seramate's separator. Sample data spans every tier. The <code>Last Updated</code> value is uncolored in-game and has no slot.</p>
+  </section>
+
+  <section id="controls"></section>
+</main>
+
+<section class="export">
+  <div class="cols">
+    <div>
+      <h3>Lua map <button data-copy="lua">Copy</button></h3>
+      <pre id="out-lua"></pre>
+    </div>
+    <div>
+      <h3>JSON map <button data-copy="json">Copy</button></h3>
+      <pre id="out-json"></pre>
+    </div>
+  </div>
+  <div class="import">
+    <h3 style="margin-top:18px">Load a saved map</h3>
+    <textarea id="import-box" placeholder="Paste a JSON map here and click Load…"></textarea>
+    <div><button id="import-btn">Load</button> <span class="msg" id="import-msg"></span></div>
+  </div>
+</section>
+
+<script>
+"use strict";
+
+// Current in-addon palette (Core/util.lua). Values are RRGGBB; the addon prepends "|cff".
+const DEFAULTS = {
+  header:  "ff8000",
+  section: "ffd100",
+  label:   "ffffff",
+  rating: [
+    { min: 2700, color: "ff8000", name: "≥ 2700" },
+    { min: 2400, color: "0070dd", name: "≥ 2400" },
+    { min: 2100, color: "1eff00", name: "≥ 2100" },
+    { min: 1750, color: "1eff00", name: "≥ 1750" },
+    { min: 0,    color: "ffffff", name: "below 1750" },
+  ],
+  title: [
+    { min: 92, color: "ffd100", name: "≥ 92 — Rank 1" },
+    { min: 90, color: "ff8000", name: "≥ 90 — Gladiator" },
+    { min: 70, color: "34fedc", name: "≥ 70 — Legend" },
+    { min: 65, color: "34fedc", name: "≥ 65 — Elite / Hero" },
+    { min: 50, color: "0070dd", name: "≥ 50 — Strategist / Duelist" },
+    { min: 40, color: "1eff00", name: "≥ 40 — Rival / Challenger" },
+    { min: 0,  color: "9d9d9d", name: "below 40 — Combatant" },
+  ],
+};
+
+const STRUCTURE = [
+  { key: "header",  name: "Header",        desc: '"Seramate PvP Info:" line' },
+  { key: "section", name: "Section title", desc: '"Current Rating:", "Titles:", …' },
+  { key: "label",   name: "Label",         desc: "Bracket names, \"Last Updated:\"" },
+];
+
+// WoW's own tooltip lines that sit above Seramate's block in-game (not editable — shown so the
+// leading blank separator reads correctly). Absent on the standalone Bnet friend frame.
+const NATIVE = [
+  { text: "Kaelynn",                    color: "fff569" }, // class color
+  { text: "<Vae Victis>",               color: "40c040" }, // guild
+  { text: "Level 80 Blood Elf Rogue",   color: "c8c8c8" },
+];
+
+// Sample record for the preview, chosen so all five rating tiers and all six title tiers show.
+const SAMPLE = {
+  sections: [
+    { title: "Current Rating", rows: [["2v2", 1655], ["3v3", 1980], ["RBG", 2240]] },
+    { title: "This Expansion", rows: [["2v2", 2470], ["3v3", 2760], ["RBG", 2130]] },
+  ],
+  titles: [
+    ["Crimson Gladiator", 100], ["Gladiator", 90], ["Legend", 70], ["Elite", 65],
+    ["Duelist", 50], ["Rival", 45], ["Combatant", 35],
+  ],
+  updated: "6 Jul 2026",
+};
+
+let state = structuredClone(DEFAULTS);
+
+const HEX = /^[0-9a-fA-F]{6}$/;
+const norm = h => h.replace(/^#/, "").toLowerCase();
+const css = h => "#" + norm(h);
+function pick(tiers, n) {
+  for (const t of tiers) if (n >= t.min) return t.color;
+  return tiers[tiers.length - 1].color;
+}
+
+// ---- preview ---------------------------------------------------------------
+function el(cls, html) { const d = document.createElement("div"); if (cls) d.className = cls; if (html != null) d.innerHTML = html; return d; }
+function esc(s) { return String(s).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c])); }
+function span(color, text) { return `<span style="color:${css(color)}">${esc(text)}</span>`; }
+
+function renderPreview() {
+  const p = document.getElementById("preview");
+  p.innerHTML = "";
+  for (const n of NATIVE) p.appendChild(el("tt-line tt-native", span(n.color, n.text)));
+  p.appendChild(el("tt-blank")); // render.lua's leading separator between native lines and our block
+  p.appendChild(el("tt-line tt-header", span(state.header, "Seramate")));
+
+  for (const sec of SAMPLE.sections) {
+    p.appendChild(el("tt-blank"));
+    p.appendChild(el("tt-line", span(state.section, sec.title + ":")));
+    for (const [bracket, rating] of sec.rows) {
+      const row = el("tt-row tt-indent");
+      row.innerHTML = `<span class="l">${span(state.label, bracket)}</span>` +
+                      `<span class="r">${span(pick(state.rating, rating), rating)}</span>`;
+      p.appendChild(row);
+    }
+  }
+
+  p.appendChild(el("tt-blank"));
+  p.appendChild(el("tt-line", span(state.section, "Titles:")));
+  for (const [name, weight] of SAMPLE.titles) {
+    p.appendChild(el("tt-line tt-indent", span(pick(state.title, weight), name)));
+  }
+
+  p.appendChild(el("tt-blank"));
+  const upd = el("tt-row");
+  upd.innerHTML = `<span class="l">${span(state.label, "Last Updated:")}</span>` +
+                  `<span class="r" style="color:#ffffff">${SAMPLE.updated}</span>`;
+  p.appendChild(upd);
+}
+
+// ---- controls --------------------------------------------------------------
+function control(getColor, setColor, name, desc) {
+  const row = el("ctl");
+  const swatch = document.createElement("input");
+  swatch.type = "color"; swatch.value = css(getColor());
+  const hex = document.createElement("input");
+  hex.type = "text"; hex.value = norm(getColor()); hex.maxLength = 7; hex.spellcheck = false;
+  const meta = el("meta", `<div class="name">${name}</div><div class="desc">${desc}</div>`);
+
+  const apply = (val, from) => {
+    const v = norm(val);
+    if (!HEX.test(v)) { hex.classList.add("bad"); return; }
+    hex.classList.remove("bad");
+    setColor(v);
+    if (from !== "swatch") swatch.value = css(v);
+    if (from !== "hex") hex.value = v;
+    renderPreview(); renderExports();
+  };
+  swatch.addEventListener("input", () => apply(swatch.value, "swatch"));
+  hex.addEventListener("input", () => apply(hex.value, "hex"));
+  hex.addEventListener("blur", () => { hex.value = norm(getColor()); hex.classList.remove("bad"); });
+
+  row.append(swatch, hex, meta);
+  return row;
+}
+
+function renderControls() {
+  const host = document.getElementById("controls");
+  host.innerHTML = "";
+  const group = (title, controls) => {
+    const g = el("group");
+    const h = document.createElement("h2"); h.textContent = title; g.appendChild(h);
+    controls.forEach(c => g.appendChild(c));
+    host.appendChild(g);
+  };
+
+  group("Structure", STRUCTURE.map(s =>
+    control(() => state[s.key], v => state[s.key] = v, s.name, s.desc)));
+
+  group("Rating tiers — colored by rating value", state.rating.map((t, i) =>
+    control(() => state.rating[i].color, v => state.rating[i].color = v,
+            "Rating " + t.name, "Applied when rating " + (t.min ? "≥ " + t.min : "< 1750"))));
+
+  group("Title tiers — colored by prestige weight", state.title.map((t, i) =>
+    control(() => state.title[i].color, v => state.title[i].color = v,
+            "Title " + t.name, "Applied when weight " + (t.min ? "≥ " + t.min : "< 40"))));
+}
+
+// ---- exports ---------------------------------------------------------------
+function mapObject() {
+  return {
+    header: state.header, section: state.section, label: state.label,
+    rating: state.rating.map(t => ({ min: t.min, color: t.color })),
+    title:  state.title.map(t => ({ min: t.min, color: t.color })),
+  };
+}
+function toJSON() { return JSON.stringify(mapObject(), null, 2); }
+function toLua() {
+  const tier = t => `\t\t{ min = ${String(t.min).padEnd(4)}, color = "${t.color}" },`;
+  return [
+    "-- Seramate tooltip color palette. Values are RRGGBB (the addon prepends \"|cff\").",
+    "-- Generated by tools/tooltip-colors.html.",
+    "local _, ns = ...",
+    "",
+    "ns.Colors = {",
+    `\theader  = "${state.header}",`,
+    `\tsection = "${state.section}",`,
+    `\tlabel   = "${state.label}",`,
+    "\trating = { -- highest threshold first; first match wins",
+    ...state.rating.map(tier),
+    "\t},",
+    "\ttitle = { -- highest weight first; first match wins",
+    ...state.title.map(tier),
+    "\t},",
+    "}",
+    "",
+  ].join("\n");
+}
+function renderExports() {
+  document.getElementById("out-json").textContent = toJSON();
+  document.getElementById("out-lua").textContent = toLua();
+}
+
+// ---- actions ---------------------------------------------------------------
+async function copy(text, btn) {
+  try { await navigator.clipboard.writeText(text); }
+  catch (e) { const t = document.createElement("textarea"); t.value = text; document.body.appendChild(t); t.select(); document.execCommand("copy"); t.remove(); }
+  if (btn) { const o = btn.textContent; btn.textContent = "Copied!"; setTimeout(() => btn.textContent = o, 1100); }
+}
+
+function loadMap(obj) {
+  const okColor = c => typeof c === "string" && HEX.test(norm(c));
+  if (!obj || !okColor(obj.header) || !okColor(obj.section) || !okColor(obj.label)) throw new Error("missing header/section/label");
+  const tiers = (arr, ref) => {
+    if (!Array.isArray(arr) || arr.length === 0) throw new Error("tiers must be a non-empty array");
+    return arr.map(t => {
+      if (!okColor(t.color)) throw new Error("bad tier color");
+      const min = Number.isFinite(t.min) ? t.min : 0;
+      const match = ref.find(r => r.min === min);
+      return { min, color: norm(t.color), name: match ? match.name : (min > 0 ? "≥ " + min : "base") };
+    });
+  };
+  state = {
+    header: norm(obj.header), section: norm(obj.section), label: norm(obj.label),
+    rating: tiers(obj.rating, DEFAULTS.rating),
+    title:  tiers(obj.title, DEFAULTS.title),
+  };
+  renderControls(); renderPreview(); renderExports();
+}
+
+document.getElementById("reset").addEventListener("click", () => {
+  state = structuredClone(DEFAULTS);
+  renderControls(); renderPreview(); renderExports();
+});
+document.getElementById("copy-lua").addEventListener("click", e => copy(toLua(), e.currentTarget));
+document.querySelectorAll("[data-copy]").forEach(b =>
+  b.addEventListener("click", () => copy(b.dataset.copy === "lua" ? toLua() : toJSON(), b)));
+document.getElementById("import-btn").addEventListener("click", () => {
+  const msg = document.getElementById("import-msg");
+  try {
+    loadMap(JSON.parse(document.getElementById("import-box").value));
+    msg.textContent = "Loaded."; msg.className = "msg ok";
+  } catch (e) {
+    msg.textContent = "Could not load: " + e.message; msg.className = "msg err";
+  }
+});
+
+renderControls(); renderPreview(); renderExports();
+</script>
+</body>
+</html>

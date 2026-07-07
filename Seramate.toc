@@ -1,0 +1,24 @@
+## Interface: 120000
+## Title: Seramate PvP Inspect
+## Notes: Any player's PvP ratings and notable titles (2v2/3v3/RBG) on tooltips, LFG, Battle.net, and a right-click profile link. Data from Seramate's ladder database.
+## Author: Seramate
+## Version: @project-version@
+## SavedVariables: SeramateSettings
+## IconTexture: Interface\AddOns\Seramate\Media\logo
+## X-Website: https://seramate.com
+## X-Curse-Project-ID: 000000
+
+Data\colors.lua
+Core\util.lua
+Core\guards.lua
+Data\realms.lua
+Data\realms_ru.lua
+Core\keys.lua
+Settings\schema.lua
+Settings\panel.lua
+Core\render.lua
+Core\init.lua
+Surfaces\unit.lua
+Surfaces\lfg.lua
+Surfaces\friends.lua
+Surfaces\menu.lua
