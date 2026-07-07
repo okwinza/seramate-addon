@@ -43,12 +43,35 @@ Titles are colored by prestige tier, low to high:
 
 ## Where it shows
 
-<table>
-<tr><td><b>Tooltips</b></td><td>player unit frames, portraits, and nameplates</td></tr>
-<tr><td><b>LFG / Premade Groups</b></td><td>group leaders in the results, and applicants to your group</td></tr>
-<tr><td><b>Battle.net friends</b></td><td>online friends who are playing WoW</td></tr>
-<tr><td><b>Right-click menu</b></td><td>the "Seramate Profile" copy-link</td></tr>
-</table>
+Seramate PvP Inspect hooks every surface where other players appear. Each one is shown below.
+
+### Character tooltips
+
+Player unit frames, portraits, and nameplates — hover anyone to see their ratings and titles.
+
+<!-- screenshot: save as .github/assets/surfaces/tooltip.png, then uncomment -->
+<!-- <div align="center"><img src=".github/assets/surfaces/tooltip.png" width="420" alt="Ratings on a player unit tooltip" /></div> -->
+
+### LFG / Premade Groups
+
+Group leaders in the Premade Groups results, and applicants to your own group.
+
+<!-- screenshot: save as .github/assets/surfaces/lfg.png, then uncomment -->
+<!-- <div align="center"><img src=".github/assets/surfaces/lfg.png" width="560" alt="Ratings in the Premade Groups list" /></div> -->
+
+### Battle.net friends
+
+Online friends currently playing WoW, on the friends-list tooltip.
+
+<!-- screenshot: save as .github/assets/surfaces/friends.png, then uncomment -->
+<!-- <div align="center"><img src=".github/assets/surfaces/friends.png" width="420" alt="Ratings on a Battle.net friend tooltip" /></div> -->
+
+### Right-click menu
+
+Right-click any player for a **Seramate** menu section with a one-click copy of their seramate.com profile link.
+
+<!-- screenshot: save as .github/assets/surfaces/menu.png, then uncomment -->
+<!-- <div align="center"><img src=".github/assets/surfaces/menu.png" width="360" alt="Seramate section in the right-click menu" /></div> -->
 
 ## Install
 
