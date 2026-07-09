@@ -63,8 +63,7 @@ Group leaders in the Premade Groups results, and applicants to your own group.
 
 Online friends currently playing WoW, on the friends-list tooltip.
 
-<!-- screenshot: save as .github/assets/surfaces/friends.png, then uncomment -->
-<!-- <div align="center"><img src=".github/assets/surfaces/friends.png" width="420" alt="Ratings on a Battle.net friend tooltip" /></div> -->
+<div align="center"><img src=".github/assets/surfaces/friends.png" width="320" alt="Ratings on a Battle.net friend tooltip" /></div>
 
 ### Right-click menu
 
