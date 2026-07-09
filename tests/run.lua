@@ -109,8 +109,8 @@ check("split no realm", n3 == "SoloName" and r3 == nil)
 
 -- ---- Keys.lookup (dual-faction + realm resolution) ---------------------------
 local REC = {
-	cur = { v2 = 1840, v3 = 1875 },
-	exp = { v2 = 2010, v3 = 2055 },
+	cur = { v2 = 1840, v3 = 1875, sh = 2405 },
+	exp = { v2 = 2010, v3 = 2055, sh = 2450 },
 	titles = {
 		{ n = "Crimson Gladiator: The War Within Season 3", w = 100 },
 		{ n = "Duelist: Dragonflight Season 4", w = 50 },
@@ -189,12 +189,48 @@ contains("build title duelist blue", text, "0070dd")
 contains("build last updated", text, "7 Jul 2025")
 check("build one line op per title", countKind(ops, "line") == 2)
 
+-- ---- Shuffle bracket rows ------------------------------------------------------
+local function findDouble(list, labelSub, valueSub)
+	for index, op in ipairs(list) do
+		if op.kind == "double" and op.left:find(labelSub, 1, true) and op.right:find(valueSub, 1, true) then
+			return index, op
+		end
+	end
+	return nil
+end
+
+local curShuffleAt, curShuffle = findDouble(ops, "Shuffle", "2405")
+local expShuffleAt, expShuffle = findDouble(ops, "Shuffle", "2450")
+check("cur shuffle renders as a double op", curShuffle ~= nil)
+check("exp shuffle renders as a double op", expShuffle ~= nil)
+-- 2405/2450 sit in the >=2400 tier; the value must carry that tier color, not the label color
+contains("cur shuffle rating tier-colored", curShuffle and curShuffle.right or "", ns.Colors.rating[2].color)
+contains("exp shuffle rating tier-colored", expShuffle and expShuffle.right or "", ns.Colors.rating[2].color)
+-- section placement: cur shuffle before the This Expansion header, exp shuffle after it
+local expHeaderAt
+for index, op in ipairs(ops) do
+	if op.kind == "title" and (op.text or ""):find("This Expansion:", 1, true) then expHeaderAt = index end
+end
+check("cur shuffle in Current Rating section", curShuffleAt ~= nil and expHeaderAt ~= nil and curShuffleAt < expHeaderAt)
+check("exp shuffle in This Expansion section", expShuffleAt ~= nil and expHeaderAt ~= nil and expShuffleAt > expHeaderAt)
+
+-- shuffle keys are toggleable and hide only their own lines
+local function shuffleDisabled(key) return key ~= "cur_shuffle" and key ~= "exp_shuffle" end
+local noShuffleText = flatten(ns.Render.build(REC, shuffleDisabled))
+check("shuffle toggles hide shuffle lines", not noShuffleText:find("Shuffle", 1, true))
+contains("other lines survive shuffle toggle", noShuffleText, "1840")
+contains("titles survive shuffle toggle", noShuffleText, "Titles:")
+local schemaKeys = table.concat(ns.Schema.keys(), ",")
+contains("panel exposes cur_shuffle", schemaKeys, "cur_shuffle")
+contains("panel exposes exp_shuffle", schemaKeys, "exp_shuffle")
+
 -- sparsity: only cur + upd present
 local SPARSE = { cur = { v3 = 1875 }, exp = {}, titles = {}, upd = 20250101 }
 local sparseText = flatten(ns.Render.build(SPARSE, allEnabled))
 contains("sparse has cur", sparseText, "1875")
 check("sparse has no expansion section", not sparseText:find("This Expansion:", 1, true))
 check("sparse has no titles section", not sparseText:find("Titles:", 1, true))
+check("no shuffle line without sh data", not sparseText:find("Shuffle", 1, true))
 
 -- everything disabled -> nothing renders
 check("all-disabled builds empty", #ns.Render.build(REC, noneEnabled) == 0)
