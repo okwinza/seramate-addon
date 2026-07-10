@@ -147,6 +147,28 @@ check("claim nil always renders 2", ns.Guard.claim(tt, nil) == true)
 tt:fireHide()
 check("claim after hide re-renders", ns.Guard.claim(tt, "g2") == true)
 
+-- rebuild-aware claim: unit frames (self portrait) re-SetUnit every ~0.2s, wiping our lines
+local function fakeCountingTooltip(startLines)
+	local t = fakeTooltip()
+	t._lines = startLines
+	function t:NumLines() return self._lines end
+	return t
+end
+local ct = fakeCountingTooltip(6)
+check("counting claim first", ns.Guard.claim(ct, "self") == true)
+ct._lines = 14 -- our section appended
+ns.Guard.mark(ct)
+check("counting claim intact skips", ns.Guard.claim(ct, "self") == false)
+ct._lines = 6 -- UpdateTooltip refresh rebuilt the default tooltip, our lines wiped
+check("claim re-renders after rebuild", ns.Guard.claim(ct, "self") == true)
+ct._lines = 14
+ns.Guard.mark(ct)
+check("re-claimed tooltip dedupes again", ns.Guard.claim(ct, "self") == false)
+ct._lines = 15 -- another addon appended after us: still intact, no dupe render
+check("extra lines still intact", ns.Guard.claim(ct, "self") == false)
+ct:fireHide()
+check("hide clears the mark", ns.Guard.claim(ct, "self") == true)
+
 -- ---- Render.build ------------------------------------------------------------
 local function allEnabled() return true end
 local function noneEnabled() return false end

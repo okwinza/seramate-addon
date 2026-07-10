@@ -29,6 +29,10 @@ local function onUnitTooltip(tooltip, data)
 	if record then
 		ns.Render.renderInto(tooltip, record, "unit")
 	end
+	-- Mark the post-render line count: unit frames rebuild the tooltip every ~0.2s (their
+	-- UpdateTooltip loop), and the mark is how claim() detects the rebuild and lets us
+	-- render again instead of leaving the default tooltip (self-portrait flicker).
+	ns.Guard.mark(tooltip)
 end
 
 if TooltipDataProcessor and TooltipDataProcessor.AddTooltipPostCall and Enum and Enum.TooltipDataType then
