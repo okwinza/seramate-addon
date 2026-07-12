@@ -72,6 +72,12 @@ Right-click any player for a **Seramate** menu section with a one-click copy of 
 <!-- screenshot: save as .github/assets/surfaces/menu.png, then uncomment -->
 <!-- <div align="center"><img src=".github/assets/surfaces/menu.png" width="360" alt="Seramate section in the right-click menu" /></div> -->
 
+## Copy Seramate Profile
+
+Want to look someone up on seramate.com? Right-click them and hit **Copy Profile Link** — their profile URL is ready to paste.
+
+<div align="center"><img src=".github/assets/surfaces/copy-profile.png" width="460" alt="Copy dialog with a preselected seramate.com profile URL" /></div>
+
 ## Install
 
 The download contains three folders. Drop all three into `World of Warcraft/_retail_/Interface/AddOns/`:
