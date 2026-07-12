@@ -118,7 +118,7 @@ This is an original, clean-room implementation. None of the code, data, realm li
 
 ## Support Seramate
 
-If Seramate PvP Inspect is useful to you, consider supporting the project — it keeps the ladder crawlers running and the daily data releases coming.
+If you'd like to help keep Seramate growing — and pick up a few perks along the way — check out our [Patreon page](https://seramate.com/patreon).
 
 <div align="center">
   <a href="https://seramate.com/patreon">
