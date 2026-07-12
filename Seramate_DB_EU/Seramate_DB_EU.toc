@@ -1,4 +1,4 @@
-## Interface: 120000
+## Interface: 120007
 ## Title: Seramate DB (EU)
 ## Notes: Bundled EU PvP rating database for Seramate.
 ## Author: Seramate
