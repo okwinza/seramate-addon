@@ -15,6 +15,8 @@
 
 </div>
 
+<div align="center"><img src=".github/assets/surfaces/friends.png" width="320" alt="Ratings on a Battle.net friend tooltip" /></div>
+
 ## What it does
 
 Hover any player and Seramate PvP Inspect adds their arena and battleground standing to the tooltip. The data comes from Seramate's own PvP ladder database and is bundled into the addon, so lookups are instant and work fully offline while you play.
@@ -62,8 +64,6 @@ Group leaders in the Premade Groups results, and applicants to your own group.
 ### Battle.net friends
 
 Online friends currently playing WoW, on the friends-list tooltip.
-
-<div align="center"><img src=".github/assets/surfaces/friends.png" width="320" alt="Ratings on a Battle.net friend tooltip" /></div>
 
 ## Copy Seramate Profile
 
