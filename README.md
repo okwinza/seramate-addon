@@ -116,4 +116,14 @@ Pure-Lua modules under `Core/`, `Surfaces/`, `Settings/`, with the generated rea
 
 This is an original, clean-room implementation. None of the code, data, realm list, or naming of any third-party addon is used.
 
+## Support Seramate
+
+If Seramate PvP Inspect is useful to you, consider supporting the project — it keeps the ladder crawlers running and the daily data releases coming.
+
+<div align="center">
+  <a href="https://seramate.com/patreon">
+    <img src=".github/assets/patreon-button.png" width="352" alt="Become a patron" />
+  </a>
+</div>
+
 <div align="center"><sub>Data from <a href="https://seramate.com">seramate.com</a>. Artwork &copy; Seramate.</sub></div>
