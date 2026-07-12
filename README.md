@@ -11,6 +11,7 @@
   <img src="https://img.shields.io/badge/regions-EU%20%7C%20US-FDA033?style=flat-square&labelColor=0E1013" alt="Regions EU and US" />
   <img src="https://img.shields.io/badge/brackets-2v2%20%7C%203v3%20%7C%20RBG%20%7C%20Shuffle-FDA033?style=flat-square&labelColor=0E1013" alt="Brackets 2v2 3v3 RBG Shuffle" />
   <img src="https://img.shields.io/badge/data-seramate.com-FDA033?style=flat-square&labelColor=0E1013" alt="Data from seramate.com" />
+  <img src="https://img.shields.io/badge/updates-daily-FDA033?style=flat-square&labelColor=0E1013" alt="Updates daily" />
 </p>
 
 </div>
@@ -112,8 +113,6 @@ Pure-Lua modules under `Core/`, `Surfaces/`, `Settings/`, with the generated rea
 - Lint: `luacheck .`
 - Tests: `lua5.1 tests/run.lua` (pure-logic tests with a mocked WoW API).
 - Release: `.github/workflows/release.yml` (fetch data from R2, then the BigWigs packager to a GitHub Release), triggered by a data refresh, a manual run, or the daily cron.
-
-This is an original, clean-room implementation. None of the code, data, realm list, or naming of any third-party addon is used.
 
 ## Support Seramate
 
