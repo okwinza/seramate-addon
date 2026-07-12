@@ -6,7 +6,7 @@
 ## SavedVariables: SeramateSettings
 ## IconTexture: Interface\AddOns\Seramate\Media\logo
 ## X-Website: https://seramate.com
-## X-Curse-Project-ID: 000000
+## X-Curse-Project-ID: 1607724
 
 Data\colors.lua
 Core\util.lua
