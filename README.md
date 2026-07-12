@@ -65,13 +65,6 @@ Online friends currently playing WoW, on the friends-list tooltip.
 
 <div align="center"><img src=".github/assets/surfaces/friends.png" width="320" alt="Ratings on a Battle.net friend tooltip" /></div>
 
-### Right-click menu
-
-Right-click any player for a **Seramate** menu section with a one-click copy of their seramate.com profile link.
-
-<!-- screenshot: save as .github/assets/surfaces/menu.png, then uncomment -->
-<!-- <div align="center"><img src=".github/assets/surfaces/menu.png" width="360" alt="Seramate section in the right-click menu" /></div> -->
-
 ## Copy Seramate Profile
 
 Want to look someone up on seramate.com? Right-click them and hit **Copy Profile Link** — their profile URL is ready to paste.
