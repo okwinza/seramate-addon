@@ -21,6 +21,17 @@ local function contains(name, haystack, needle)
 	check(name .. " (in: " .. tostring(haystack) .. ")", type(haystack) == "string" and haystack:find(needle, 1, true) ~= nil)
 end
 
+local function allEnabled() return true end
+
+-- Render.build ops -> one searchable string.
+local function flatten(ops)
+	local parts = {}
+	for _, op in ipairs(ops) do
+		parts[#parts + 1] = (op.text or "") .. (op.left or "") .. "\t" .. (op.right or "")
+	end
+	return table.concat(parts, "\n")
+end
+
 -- ---- minimal WoW stubs -------------------------------------------------------
 _G.IsInInstance = function() return false end
 _G.GetRealmName = function() return "Tarren Mill" end
@@ -155,14 +166,7 @@ local nodict = ns.Keys.lookup("Nodict", "Ravencrest")
 check("decode without dict memoizes empty", type(nodict.titles) == "table" and #nodict.titles == 0)
 check("decode without dict stays memoized", ns.Keys.lookup("Nodict", "Ravencrest").titles == nodict.titles)
 -- decoded records render titles through the normal pure path
-local encodedText = (function()
-	local parts = {}
-	for _, op in ipairs(ns.Render.build(decoded, function() return true end)) do
-		parts[#parts + 1] = (op.text or "") .. (op.left or "") .. (op.right or "")
-	end
-	return table.concat(parts, "\n")
-end)()
-contains("decoded titles render", encodedText, "Crimson Gladiator: The War Within Season 3")
+contains("decoded titles render", flatten(ns.Render.build(decoded, allEnabled)), "Crimson Gladiator: The War Within Season 3")
 -- old-format record (titles already a table) is untouched by the decoder
 local LEGACY_TITLES = { { n = "Legend", w = 70 } }
 ns.DB.HORDE["Old-Tarren Mill"] = { cur = { v2 = 1600 }, titles = LEGACY_TITLES, upd = 20250101 }
@@ -182,13 +186,7 @@ local bare = ns.Keys.lookup("Bare", "Tarren Mill")
 check("bare record memoizes empty brackets", type(bare.cur) == "table" and next(bare.cur) == nil and type(bare.exp) == "table")
 check("legacy cur table untouched", ns.Keys.lookup("Old", "Tarren Mill").cur.v2 == 1600)
 -- packed records render ratings through the normal pure path
-local packedText = (function()
-	local parts = {}
-	for _, op in ipairs(ns.Render.build(packed, function() return true end)) do
-		parts[#parts + 1] = (op.text or "") .. (op.left or "") .. (op.right or "")
-	end
-	return table.concat(parts, "\n")
-end)()
+local packedText = flatten(ns.Render.build(packed, allEnabled))
 contains("packed cur rating renders", packedText, "1846")
 contains("packed shuffle renders", packedText, "2955")
 contains("packed exp renders", packedText, "2010")
@@ -232,16 +230,7 @@ ct:fireHide()
 check("hide clears the mark", ns.Guard.claim(ct, "self") == true)
 
 -- ---- Render.build ------------------------------------------------------------
-local function allEnabled() return true end
 local function noneEnabled() return false end
-
-local function flatten(ops)
-	local parts = {}
-	for _, op in ipairs(ops) do
-		parts[#parts + 1] = (op.text or "") .. (op.left or "") .. "\t" .. (op.right or "")
-	end
-	return table.concat(parts, "\n")
-end
 
 local function countKind(ops, kind)
 	local n = 0

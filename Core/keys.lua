@@ -56,17 +56,24 @@ end
 -- and memoize — even on failure (missing dictionary, stale indexes) — so a hover never
 -- re-parses. Legacy records (fields already tables) pass through untouched.
 
+-- Shared read-only table memoized for absent packed fields; never mutate it (same
+-- convention as the reused title dictionary entries below).
+local EMPTY = {}
+
 local function decodeBrackets(record, packedField, tableField)
 	if type(record[tableField]) == "table" then
 		return
 	end
 
-	local decoded = {}
 	local packed = record[packedField]
-	if type(packed) == "string" then
-		for bracket, rating in packed:gmatch("(%w+)=(%d+)") do
-			decoded[bracket] = tonumber(rating)
-		end
+	if type(packed) ~= "string" then
+		record[tableField] = EMPTY
+		return
+	end
+
+	local decoded = {}
+	for bracket, rating in packed:gmatch("(%w+)=(%d+)") do
+		decoded[bracket] = tonumber(rating)
 	end
 	record[tableField] = decoded
 end
