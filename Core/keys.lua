@@ -50,10 +50,28 @@ local function probe(key)
 	return nil
 end
 
--- Records ship titles as a dictionary-index string (`t="1,5,9"` into `owner.T`) so the DB
--- holds one flat string per record instead of nested tables (Lua GC cost). Decode on first
--- view and memoize — even on failure (missing dictionary, stale indexes) — so a hover never
--- re-parses. The memoized list REUSES the dictionary's {n,w} entry tables; never mutate them.
+-- Records ship their sub-tables as flat strings so the DB holds no per-record tables for
+-- the Lua GC to traverse: `c`/`e` pack the bracket ratings (`c="v2=1840,sh=2405"`), `t`
+-- indexes the owner's title dictionary (`t="1,5,9"` into `owner.T`). Decode on first view
+-- and memoize — even on failure (missing dictionary, stale indexes) — so a hover never
+-- re-parses. Legacy records (fields already tables) pass through untouched.
+
+local function decodeBrackets(record, packedField, tableField)
+	if type(record[tableField]) == "table" then
+		return
+	end
+
+	local decoded = {}
+	local packed = record[packedField]
+	if type(packed) == "string" then
+		for bracket, rating in packed:gmatch("(%w+)=(%d+)") do
+			decoded[bracket] = tonumber(rating)
+		end
+	end
+	record[tableField] = decoded
+end
+
+-- The memoized list REUSES the dictionary's {n,w} entry tables; never mutate them.
 local function decodeTitles(record, owner)
 	if type(record.titles) == "table" or type(record.t) ~= "string" then
 		return
@@ -70,6 +88,12 @@ local function decodeTitles(record, owner)
 		end
 	end
 	record.titles = titles
+end
+
+local function decodeRecord(record, owner)
+	decodeBrackets(record, "c", "cur")
+	decodeBrackets(record, "e", "exp")
+	decodeTitles(record, owner)
 end
 
 -- Look up a character's record. realmToken may be nil (same realm as the player), a display
@@ -97,7 +121,7 @@ function Keys.lookup(name, realmToken)
 	end
 
 	if record then
-		decodeTitles(record, owner)
+		decodeRecord(record, owner)
 	end
 	return record
 end

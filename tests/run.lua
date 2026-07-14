@@ -168,6 +168,31 @@ local LEGACY_TITLES = { { n = "Legend", w = 70 } }
 ns.DB.HORDE["Old-Tarren Mill"] = { cur = { v2 = 1600 }, titles = LEGACY_TITLES, upd = 20250101 }
 check("legacy titles table untouched", ns.Keys.lookup("Old", "Tarren Mill").titles == LEGACY_TITLES)
 
+-- ---- Keys.lookup lazy bracket decode (c/e pack the rating maps as strings) -----
+local PACKED = { c = "v2=1846,v3=2509,sh=2955", e = "v2=2010", t = "1", upd = 20250707 }
+local BARE = { upd = 20250101 }
+ns.DB.HORDE["Packed-Tarren Mill"] = PACKED
+ns.DB.HORDE["Bare-Tarren Mill"] = BARE
+local packed = ns.Keys.lookup("Packed", "Tarren Mill")
+check("bracket decode all pairs", packed.cur.v2 == 1846 and packed.cur.v3 == 2509 and packed.cur.sh == 2955)
+check("bracket decode numbers not strings", type(packed.cur.v2) == "number")
+check("bracket decode exp separate", packed.exp.v2 == 2010 and packed.exp.v3 == nil)
+check("bracket decode memoizes", ns.Keys.lookup("Packed", "Tarren Mill").cur == packed.cur)
+local bare = ns.Keys.lookup("Bare", "Tarren Mill")
+check("bare record memoizes empty brackets", type(bare.cur) == "table" and next(bare.cur) == nil and type(bare.exp) == "table")
+check("legacy cur table untouched", ns.Keys.lookup("Old", "Tarren Mill").cur.v2 == 1600)
+-- packed records render ratings through the normal pure path
+local packedText = (function()
+	local parts = {}
+	for _, op in ipairs(ns.Render.build(packed, function() return true end)) do
+		parts[#parts + 1] = (op.text or "") .. (op.left or "") .. (op.right or "")
+	end
+	return table.concat(parts, "\n")
+end)()
+contains("packed cur rating renders", packedText, "1846")
+contains("packed shuffle renders", packedText, "2955")
+contains("packed exp renders", packedText, "2010")
+
 -- ---- Guard.claim -------------------------------------------------------------
 local function fakeTooltip()
 	local t = {}
