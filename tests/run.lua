@@ -131,6 +131,43 @@ check("lookup empty name", ns.Keys.lookup("", "Tarren Mill") == nil)
 check("lookup russian realm spaced", ns.Keys.lookup("Мокдэмвпхх", "Свежеватель Душ") == REC)
 check("lookup russian realm as bnet returns it", ns.Keys.lookup("Мокдэмвпхх", "СвежевательДуш") == REC)
 
+-- ---- Keys.lookup lazy title decode (t="2,1" indexes into the owner's .T dict) --
+local DICT = {
+	{ n = "Crimson Gladiator: The War Within Season 3", w = 100 },
+	{ n = "Duelist: Dragonflight Season 4", w = 50 },
+}
+local ENCODED = { cur = { v2 = 1900 }, t = "2,1", upd = 20250707 }
+local NO_DICT = { cur = { v2 = 1700 }, t = "1", upd = 20250707 }
+local STALE = { cur = { v2 = 1800 }, t = "1,99,2", upd = 20250707 }
+ns.DB = {
+	HORDE = { ["Enc-Tarren Mill"] = ENCODED, ["Stale-Tarren Mill"] = STALE, T = DICT },
+	ALLIANCE = { ["Nodict-Ravencrest"] = NO_DICT },
+}
+local decoded = ns.Keys.lookup("Enc", "Tarren Mill")
+check("decode returns the record", decoded == ENCODED)
+check("decode follows index order", decoded.titles[1] == DICT[2] and decoded.titles[2] == DICT[1])
+check("decode reuses dict entry tables", decoded.titles[1].n == "Duelist: Dragonflight Season 4")
+local again = ns.Keys.lookup("Enc", "Tarren Mill")
+check("decode memoizes (same list table)", again.titles == decoded.titles)
+local stale = ns.Keys.lookup("Stale", "Tarren Mill")
+check("decode skips out-of-range index without holes", #stale.titles == 2 and stale.titles[2] == DICT[2])
+local nodict = ns.Keys.lookup("Nodict", "Ravencrest")
+check("decode without dict memoizes empty", type(nodict.titles) == "table" and #nodict.titles == 0)
+check("decode without dict stays memoized", ns.Keys.lookup("Nodict", "Ravencrest").titles == nodict.titles)
+-- decoded records render titles through the normal pure path
+local encodedText = (function()
+	local parts = {}
+	for _, op in ipairs(ns.Render.build(decoded, function() return true end)) do
+		parts[#parts + 1] = (op.text or "") .. (op.left or "") .. (op.right or "")
+	end
+	return table.concat(parts, "\n")
+end)()
+contains("decoded titles render", encodedText, "Crimson Gladiator: The War Within Season 3")
+-- old-format record (titles already a table) is untouched by the decoder
+local LEGACY_TITLES = { { n = "Legend", w = 70 } }
+ns.DB.HORDE["Old-Tarren Mill"] = { cur = { v2 = 1600 }, titles = LEGACY_TITLES, upd = 20250101 }
+check("legacy titles table untouched", ns.Keys.lookup("Old", "Tarren Mill").titles == LEGACY_TITLES)
+
 -- ---- Guard.claim -------------------------------------------------------------
 local function fakeTooltip()
 	local t = {}
