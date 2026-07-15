@@ -8,6 +8,9 @@ ns.Schema = Schema
 
 Schema.SECTIONS = { "Current Rating", "This Expansion" }
 
+-- Short section labels for the compact (in-combat) rendering.
+Schema.SHORT = { ["Current Rating"] = "Current", ["This Expansion"] = "Exp" }
+
 Schema.rows = {
 	{ key = "cur_2v2", section = "Current Rating", label = "2v2", src = "cur", bracket = "v2" },
 	{ key = "cur_3v3", section = "Current Rating", label = "3v3", src = "cur", bracket = "v3" },

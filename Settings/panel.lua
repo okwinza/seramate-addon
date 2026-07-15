@@ -37,6 +37,28 @@ function Settings_.enabler()
 	return Settings_.isLineEnabled
 end
 
+-- What the tooltip does while the player is in combat.
+local COMBAT_MODES = { show = true, compact = true, hide = true }
+
+Settings_.COMBAT_OPTIONS = {
+	{ mode = "show", label = "Show everything" },
+	{ mode = "compact", label = "Compact summary" },
+	{ mode = "hide", label = "Hide" },
+}
+
+function Settings_.combatMode()
+	local mode = SeramateSettings and SeramateSettings.combat
+	if COMBAT_MODES[mode] then
+		return mode
+	end
+	return "show"
+end
+
+function Settings_.setCombatMode(mode)
+	SeramateSettings = SeramateSettings or {}
+	SeramateSettings.combat = COMBAT_MODES[mode] and mode or "show"
+end
+
 local function makeCheckbox(parent, scope, key)
 	local box = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
 	box:SetSize(24, 24)
@@ -64,6 +86,38 @@ local function addToggleRow(panel, text, scope, key, y)
 	return y - 28
 end
 
+-- Three mutually exclusive radio rows bound to Settings_.combatMode(); returns the next y.
+local function addCombatModeRows(panel, y)
+	local buttons = {}
+	local function refresh()
+		local current = Settings_.combatMode()
+		for _, button in ipairs(buttons) do
+			button:SetChecked(button.mode == current)
+		end
+	end
+
+	for _, option in ipairs(Settings_.COMBAT_OPTIONS) do
+		local button = CreateFrame("CheckButton", nil, panel, "UIRadioButtonTemplate")
+		button:SetSize(16, 16)
+		button:SetPoint("TOPLEFT", 24, y - 4)
+		button.mode = option.mode
+		button:SetScript("OnClick", function(self)
+			Settings_.setCombatMode(self.mode)
+			refresh()
+		end)
+
+		local label = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+		label:SetPoint("LEFT", button, "RIGHT", 4, 0)
+		label:SetText(option.label)
+
+		buttons[#buttons + 1] = button
+		y = y - 24
+	end
+
+	refresh()
+	return y
+end
+
 local function buildCanvas()
 	local panel = CreateFrame("Frame")
 	panel.name = "Seramate PvP Inspect"
@@ -89,6 +143,10 @@ local function buildCanvas()
 	for _, surface in ipairs(ns.Schema.surfaces) do
 		y = addToggleRow(panel, surface.label, "surfaces", surface.key, y)
 	end
+
+	y = y - 10
+	y = addSectionHeader(panel, "In Combat", y)
+	addCombatModeRows(panel, y)
 
 	return panel
 end

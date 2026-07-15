@@ -308,6 +308,33 @@ check("no shuffle line without sh data", not sparseText:find("Shuffle", 1, true)
 -- everything disabled -> nothing renders
 check("all-disabled builds empty", #ns.Render.build(REC, noneEnabled) == 0)
 
+-- ---- Render.buildCompact (in-combat) -------------------------------------------
+local compact = ns.Render.buildCompact(REC, allEnabled)
+check("compact non-empty", #compact > 0)
+check("compact starts with blank", compact[1].kind == "blank")
+contains("compact header", compact[2].text, "Seramate")
+check("compact one double per section", countKind(compact, "double") == 2)
+local _, compactCur = findDouble(compact, "Current:", "1840")
+local _, compactExp = findDouble(compact, "Exp:", "2010")
+check("compact current section folded", compactCur ~= nil)
+check("compact exp section folded", compactExp ~= nil)
+contains("compact current includes shuffle", compactCur and compactCur.right or "", "2405")
+contains("compact shuffle tier-colored", compactCur and compactCur.right or "", ns.Colors.rating[2].color)
+check("compact only best title", countKind(compact, "line") == 1)
+local compactText = flatten(compact)
+contains("compact best title is r1", compactText, "Crimson Gladiator: The War Within Season 3")
+check("compact drops lesser titles", not compactText:find("Duelist", 1, true))
+check("compact drops last updated", not compactText:find("7 Jul 2025", 1, true))
+check("compact respects leadingBlank=false", ns.Render.buildCompact(REC, allEnabled, false)[1].kind == "title")
+check("compact all-disabled builds empty", #ns.Render.buildCompact(REC, noneEnabled) == 0)
+-- toggled-off shuffle stays out of the folded line
+local compactNoShuffle = flatten(ns.Render.buildCompact(REC, shuffleDisabled))
+check("compact honors line toggles", not compactNoShuffle:find("2405", 1, true))
+contains("compact keeps other brackets", compactNoShuffle, "1840")
+-- titles toggled off -> no title line
+local function titlesDisabled(key) return key ~= "titles" end
+check("compact honors titles toggle", countKind(ns.Render.buildCompact(REC, titlesDisabled), "line") == 0)
+
 -- ---- Settings toggles (per-line + per-surface, default on) --------------------
 check("line default enabled", ns.Settings.isLineEnabled("cur_2v2") == true)
 check("surface default enabled", ns.Settings.isSurfaceEnabled("unit") == true)
@@ -317,6 +344,27 @@ ns.Settings.set("bnet", "surfaces", false)
 check("surface toggled off", ns.Settings.isSurfaceEnabled("bnet") == false)
 check("line/surface scopes independent", ns.Settings.isLineEnabled("bnet") == true)
 check("enabler reflects line toggles", ns.Settings.enabler()("titles") == false)
+
+-- ---- Combat mode setting -------------------------------------------------------
+eq("combat mode defaults to show", ns.Settings.combatMode(), "show")
+ns.Settings.setCombatMode("compact")
+eq("combat mode set compact", ns.Settings.combatMode(), "compact")
+ns.Settings.setCombatMode("hide")
+eq("combat mode set hide", ns.Settings.combatMode(), "hide")
+ns.Settings.setCombatMode("garbage")
+eq("combat mode rejects unknown values", ns.Settings.combatMode(), "show")
+SeramateSettings.combat = "junk-from-old-version"
+eq("combat mode sanitizes stored junk", ns.Settings.combatMode(), "show")
+
+-- ---- Util.inCombat -------------------------------------------------------------
+check("inCombat false without API", ns.Util.inCombat() == false)
+_G.InCombatLockdown = function() return true end
+check("inCombat via lockdown", ns.Util.inCombat() == true)
+_G.InCombatLockdown = function() return false end
+_G.UnitAffectingCombat = function(unit) return unit == "player" end
+check("inCombat via UnitAffectingCombat", ns.Util.inCombat() == true)
+_G.UnitAffectingCombat = function() return false end
+check("inCombat false out of combat", ns.Util.inCombat() == false)
 
 -- ---- summary -----------------------------------------------------------------
 print(string.format("\n%d passed, %d failed", passed, failed))

@@ -94,6 +94,8 @@ Two sets of toggles, all on by default:
 - **Lines**: which rows appear. Current 2v2 / 3v3 / RBG / Shuffle, this-expansion 2v2 / 3v3 / RBG / Shuffle, Titles, and Last Updated.
 - **Surfaces**: which tooltips the addon hooks. Character tooltip, LFG / Premade Groups, and Battle.net friends.
 
+Plus an **In Combat** mode: show everything (default), a compact summary (one line per rating section plus your best title), or hide the Seramate block entirely while you're fighting.
+
 `/seramate dbg` (or `/seramate debug`) toggles debug messages on and off.
 
 ## Coverage and data

@@ -61,13 +61,75 @@ function Render.build(record, enabled, leadingBlank)
 	return ops
 end
 
+local function bestTitle(record)
+	if type(record.titles) ~= "table" then
+		return nil
+	end
+	local best
+	for _, title in ipairs(record.titles) do
+		if not best or (title.w or 0) > (best.w or 0) then
+			best = title
+		end
+	end
+	return best
+end
+
+-- Compact variant for combat: the same data folded to one line per rating section plus the
+-- single best title, no Last Updated. Same enabled() contract as build().
+function Render.buildCompact(record, enabled, leadingBlank)
+	local Util = ns.Util
+	local Schema = ns.Schema
+	local ops = {}
+
+	for _, sectionName in ipairs(Schema.SECTIONS) do
+		local parts = {}
+		for _, row in ipairs(Schema.rows) do
+			if row.section == sectionName and enabled(row.key) then
+				local value = Schema.value(row, record)
+				if value then
+					parts[#parts + 1] = Util.label(row.label) .. " " .. value
+				end
+			end
+		end
+
+		if #parts > 0 then
+			ops[#ops + 1] = {
+				kind = "double",
+				left = Util.section((Schema.SHORT[sectionName] or sectionName) .. ":"),
+				right = table.concat(parts, "  "),
+			}
+		end
+	end
+
+	local title = enabled(Schema.titlesRow.key) and bestTitle(record) or nil
+	if title then
+		ops[#ops + 1] = { kind = "line", text = Util.titleText(title.n, title.w) }
+	end
+
+	if #ops == 0 then
+		return ops
+	end
+
+	table.insert(ops, 1, { kind = "title", text = Util.header("Seramate") })
+	if leadingBlank ~= false then
+		table.insert(ops, 1, { kind = "blank" })
+	end
+	return ops
+end
+
 function Render.renderInto(tooltip, record, surface)
 	if surface and not ns.Settings.isSurfaceEnabled(surface) then
 		return false
 	end
 
+	local mode = ns.Util.inCombat() and ns.Settings.combatMode() or "show"
+	if mode == "hide" then
+		return false
+	end
+
 	local hasContent = type(tooltip.NumLines) == "function" and tooltip:NumLines() > 0
-	local ops = Render.build(record, ns.Settings.enabler(), hasContent)
+	local builder = mode == "compact" and Render.buildCompact or Render.build
+	local ops = builder(record, ns.Settings.enabler(), hasContent)
 	if #ops == 0 then
 		return false
 	end

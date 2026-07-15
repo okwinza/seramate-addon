@@ -87,6 +87,16 @@ function Util.label(text)
 	return Util.colorize(text, LABEL)
 end
 
+function Util.inCombat()
+	if type(InCombatLockdown) == "function" and InCombatLockdown() then
+		return true
+	end
+	if type(UnitAffectingCombat) == "function" and UnitAffectingCombat("player") then
+		return true
+	end
+	return false
+end
+
 function Util.inInstance()
 	if type(IsInInstance) ~= "function" then
 		return false
