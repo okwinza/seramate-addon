@@ -117,12 +117,28 @@ function Render.buildCompact(record, enabled, leadingBlank)
 	return ops
 end
 
+-- Which rendering a tooltip gets: the base layout normally, with the combat setting able to
+-- override it while fighting. Returns "full" | "compact" | "hide". Pure, so it's unit-tested.
+function Render.resolveMode(inCombat, layout, combat)
+	local base = layout == "compact" and "compact" or "full"
+	if not inCombat then
+		return base
+	end
+	if combat == "hide" then
+		return "hide"
+	end
+	if combat == "compact" then
+		return "compact"
+	end
+	return base -- "inherit"
+end
+
 function Render.renderInto(tooltip, record, surface)
 	if surface and not ns.Settings.isSurfaceEnabled(surface) then
 		return false
 	end
 
-	local mode = ns.Util.inCombat() and ns.Settings.combatMode() or "show"
+	local mode = Render.resolveMode(ns.Util.inCombat(), ns.Settings.layoutMode(), ns.Settings.combatMode())
 	if mode == "hide" then
 		return false
 	end

@@ -345,16 +345,36 @@ check("surface toggled off", ns.Settings.isSurfaceEnabled("bnet") == false)
 check("line/surface scopes independent", ns.Settings.isLineEnabled("bnet") == true)
 check("enabler reflects line toggles", ns.Settings.enabler()("titles") == false)
 
--- ---- Combat mode setting -------------------------------------------------------
-eq("combat mode defaults to show", ns.Settings.combatMode(), "show")
+-- ---- Layout mode setting -------------------------------------------------------
+eq("layout mode defaults to full", ns.Settings.layoutMode(), "full")
+ns.Settings.setLayoutMode("compact")
+eq("layout mode set compact", ns.Settings.layoutMode(), "compact")
+ns.Settings.setLayoutMode("garbage")
+eq("layout mode rejects unknown values", ns.Settings.layoutMode(), "full")
+SeramateSettings.layout = "junk"
+eq("layout mode sanitizes stored junk", ns.Settings.layoutMode(), "full")
+
+-- ---- Combat mode setting (override of the base layout) --------------------------
+eq("combat mode defaults to inherit", ns.Settings.combatMode(), "inherit")
 ns.Settings.setCombatMode("compact")
 eq("combat mode set compact", ns.Settings.combatMode(), "compact")
 ns.Settings.setCombatMode("hide")
 eq("combat mode set hide", ns.Settings.combatMode(), "hide")
 ns.Settings.setCombatMode("garbage")
-eq("combat mode rejects unknown values", ns.Settings.combatMode(), "show")
+eq("combat mode rejects unknown values", ns.Settings.combatMode(), "inherit")
 SeramateSettings.combat = "junk-from-old-version"
-eq("combat mode sanitizes stored junk", ns.Settings.combatMode(), "show")
+eq("combat mode sanitizes stored junk", ns.Settings.combatMode(), "inherit")
+SeramateSettings.combat = "show"
+eq("combat mode maps legacy show to inherit", ns.Settings.combatMode(), "inherit")
+
+-- ---- Render.resolveMode (base layout + combat override) ------------------------
+eq("resolve full ooc", ns.Render.resolveMode(false, "full", "inherit"), "full")
+eq("resolve compact ooc", ns.Render.resolveMode(false, "compact", "inherit"), "compact")
+eq("resolve combat inherits full", ns.Render.resolveMode(true, "full", "inherit"), "full")
+eq("resolve combat inherits compact", ns.Render.resolveMode(true, "compact", "inherit"), "compact")
+eq("resolve combat forces compact over full", ns.Render.resolveMode(true, "full", "compact"), "compact")
+eq("resolve combat hide wins", ns.Render.resolveMode(true, "compact", "hide"), "hide")
+eq("resolve combat setting ignored out of combat", ns.Render.resolveMode(false, "full", "hide"), "full")
 
 -- ---- Util.inCombat -------------------------------------------------------------
 check("inCombat false without API", ns.Util.inCombat() == false)

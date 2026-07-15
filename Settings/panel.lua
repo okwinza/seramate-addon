@@ -37,26 +37,51 @@ function Settings_.enabler()
 	return Settings_.isLineEnabled
 end
 
--- What the tooltip does while the player is in combat.
-local COMBAT_MODES = { show = true, compact = true, hide = true }
+-- The base tooltip layout, applied both in and out of combat (combat can override it below).
+local LAYOUT_MODES = { full = true, compact = true }
+
+Settings_.LAYOUT_OPTIONS = {
+	{ mode = "full", label = "Full" },
+	{ mode = "compact", label = "Compact" },
+}
+
+function Settings_.layoutMode()
+	local mode = SeramateSettings and SeramateSettings.layout
+	if LAYOUT_MODES[mode] then
+		return mode
+	end
+	return "full"
+end
+
+function Settings_.setLayoutMode(mode)
+	SeramateSettings = SeramateSettings or {}
+	SeramateSettings.layout = LAYOUT_MODES[mode] and mode or "full"
+end
+
+-- What the tooltip does while in combat. "inherit" uses the base layout above; the others
+-- override it. ("show" is the pre-Layout value name and still maps to inherit.)
+local COMBAT_MODES = { inherit = true, compact = true, hide = true }
 
 Settings_.COMBAT_OPTIONS = {
-	{ mode = "show", label = "Show everything" },
+	{ mode = "inherit", label = "Same as usual" },
 	{ mode = "compact", label = "Compact summary" },
 	{ mode = "hide", label = "Hide" },
 }
 
 function Settings_.combatMode()
 	local mode = SeramateSettings and SeramateSettings.combat
+	if mode == "show" then
+		return "inherit"
+	end
 	if COMBAT_MODES[mode] then
 		return mode
 	end
-	return "show"
+	return "inherit"
 end
 
 function Settings_.setCombatMode(mode)
 	SeramateSettings = SeramateSettings or {}
-	SeramateSettings.combat = COMBAT_MODES[mode] and mode or "show"
+	SeramateSettings.combat = COMBAT_MODES[mode] and mode or "inherit"
 end
 
 local function makeCheckbox(parent, scope, key)
@@ -86,23 +111,23 @@ local function addToggleRow(panel, text, scope, key, y)
 	return y - 28
 end
 
--- Three mutually exclusive radio rows bound to Settings_.combatMode(); returns the next y.
-local function addCombatModeRows(panel, y)
+-- A mutually exclusive radio group bound to get/set mode accessors; returns the next y.
+local function addRadioRows(panel, y, options, getMode, setMode)
 	local buttons = {}
 	local function refresh()
-		local current = Settings_.combatMode()
+		local current = getMode()
 		for _, button in ipairs(buttons) do
 			button:SetChecked(button.mode == current)
 		end
 	end
 
-	for _, option in ipairs(Settings_.COMBAT_OPTIONS) do
+	for _, option in ipairs(options) do
 		local button = CreateFrame("CheckButton", nil, panel, "UIRadioButtonTemplate")
 		button:SetSize(16, 16)
 		button:SetPoint("TOPLEFT", 24, y - 4)
 		button.mode = option.mode
 		button:SetScript("OnClick", function(self)
-			Settings_.setCombatMode(self.mode)
+			setMode(self.mode)
 			refresh()
 		end)
 
@@ -118,36 +143,66 @@ local function addCombatModeRows(panel, y)
 	return y
 end
 
-local function buildCanvas()
+-- A scrollable content frame filling the canvas. The Settings canvas layout does not scroll
+-- on its own, and our controls are taller than the viewport, so widgets are parented to this
+-- child (not the panel) and the child grows to fit. Returns panel, content, setContentHeight.
+local function buildScrollableCanvas()
 	local panel = CreateFrame("Frame")
 	panel.name = "Seramate PvP Inspect"
 
-	local title = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+	local scroll = CreateFrame("ScrollFrame", nil, panel, "UIPanelScrollFrameTemplate")
+	scroll:SetPoint("TOPLEFT", 3, -3)
+	scroll:SetPoint("BOTTOMRIGHT", -27, 3) -- leave room for the scrollbar on the right
+
+	local content = CreateFrame("Frame", nil, scroll)
+	content:SetSize(1, 1)
+	scroll:SetScrollChild(content)
+	-- Match the child width to the viewport so anchors and wrapping stay correct as it resizes.
+	scroll:SetScript("OnSizeChanged", function(_, width)
+		content:SetWidth(width)
+	end)
+
+	local function setContentHeight(bottomY)
+		content:SetHeight(math.abs(bottomY) + 16)
+	end
+
+	return panel, content, setContentHeight
+end
+
+local function buildCanvas()
+	local panel, content, setContentHeight = buildScrollableCanvas()
+
+	local title = content:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
 	title:SetPoint("TOPLEFT", 16, -16)
 	title:SetText("Seramate PvP Inspect")
 
-	local sub = panel:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+	local sub = content:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
 	sub:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -6)
 	sub:SetText("Choose what to show, and which tooltips to show it on.")
 
 	local y = -64
-	y = addSectionHeader(panel, "Lines", y)
+	y = addSectionHeader(content, "Layout", y)
+	y = addRadioRows(content, y, Settings_.LAYOUT_OPTIONS, Settings_.layoutMode, Settings_.setLayoutMode)
+
+	y = y - 10
+	y = addSectionHeader(content, "Lines", y)
 	for _, row in ipairs(ns.Schema.rows) do
-		y = addToggleRow(panel, row.section .. ": " .. row.label, "lines", row.key, y)
+		y = addToggleRow(content, row.section .. ": " .. row.label, "lines", row.key, y)
 	end
-	y = addToggleRow(panel, ns.Schema.titlesRow.label, "lines", ns.Schema.titlesRow.key, y)
-	y = addToggleRow(panel, ns.Schema.updatedRow.label, "lines", ns.Schema.updatedRow.key, y)
+	y = addToggleRow(content, ns.Schema.titlesRow.label, "lines", ns.Schema.titlesRow.key, y)
+	y = addToggleRow(content, ns.Schema.updatedRow.label, "lines", ns.Schema.updatedRow.key, y)
 
 	y = y - 10
-	y = addSectionHeader(panel, "Surfaces", y)
+	y = addSectionHeader(content, "Surfaces", y)
 	for _, surface in ipairs(ns.Schema.surfaces) do
-		y = addToggleRow(panel, surface.label, "surfaces", surface.key, y)
+		y = addToggleRow(content, surface.label, "surfaces", surface.key, y)
 	end
 
 	y = y - 10
-	y = addSectionHeader(panel, "In Combat", y)
-	addCombatModeRows(panel, y)
+	y = addSectionHeader(content, "In Combat", y)
+	y = addRadioRows(content, y, Settings_.COMBAT_OPTIONS, Settings_.combatMode, Settings_.setCombatMode)
 
+	setContentHeight(y)
 	return panel
 end
 

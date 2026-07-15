@@ -2,9 +2,11 @@
 
 ## Unreleased
 
-- New "In Combat" setting (`/seramate`): choose what the tooltip does while you're fighting —
-  show everything (default), a compact summary (one line per rating section plus your best
-  title), or hide the Seramate block entirely.
+- New "Layout" setting (`/seramate`): render the tooltip Full (default) or Compact — the
+  compact style folds each rating section to a single line and shows only your best title,
+  and now applies everywhere, not just in combat.
+- New "In Combat" setting: what the tooltip does while you're fighting — same as usual
+  (default), force the compact summary, or hide the Seramate block entirely.
 
 - Performance: the bundled databases no longer hold any per-record Lua tables — titles are
   a shared per-file dictionary with per-record index references, and bracket ratings are
