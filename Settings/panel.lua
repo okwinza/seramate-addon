@@ -84,6 +84,29 @@ function Settings_.setCombatMode(mode)
 	SeramateSettings.combat = COMBAT_MODES[mode] and mode or "inherit"
 end
 
+-- Same override inside instances (arenas, battlegrounds, dungeons, raids), for players who
+-- don't want the tooltip while actually pvping.
+local INSTANCE_MODES = { inherit = true, compact = true, hide = true }
+
+Settings_.INSTANCE_OPTIONS = {
+	{ mode = "inherit", label = "Same as usual" },
+	{ mode = "compact", label = "Compact summary" },
+	{ mode = "hide", label = "Hide" },
+}
+
+function Settings_.instanceMode()
+	local mode = SeramateSettings and SeramateSettings.instance
+	if INSTANCE_MODES[mode] then
+		return mode
+	end
+	return "inherit"
+end
+
+function Settings_.setInstanceMode(mode)
+	SeramateSettings = SeramateSettings or {}
+	SeramateSettings.instance = INSTANCE_MODES[mode] and mode or "inherit"
+end
+
 local function makeCheckbox(parent, scope, key)
 	local box = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
 	box:SetSize(24, 24)
@@ -201,6 +224,10 @@ local function buildCanvas()
 	y = y - 10
 	y = addSectionHeader(content, "In Combat", y)
 	y = addRadioRows(content, y, Settings_.COMBAT_OPTIONS, Settings_.combatMode, Settings_.setCombatMode)
+
+	y = y - 10
+	y = addSectionHeader(content, "In Instances (arena, battleground, dungeon)", y)
+	y = addRadioRows(content, y, Settings_.INSTANCE_OPTIONS, Settings_.instanceMode, Settings_.setInstanceMode)
 
 	setContentHeight(y)
 	return panel

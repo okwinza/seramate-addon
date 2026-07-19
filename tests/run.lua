@@ -376,6 +376,22 @@ eq("resolve combat forces compact over full", ns.Render.resolveMode(true, "full"
 eq("resolve combat hide wins", ns.Render.resolveMode(true, "compact", "hide"), "hide")
 eq("resolve combat setting ignored out of combat", ns.Render.resolveMode(false, "full", "hide"), "full")
 
+-- ---- Render.resolveMode (instance override) ------------------------------------
+eq("resolve instance inherits", ns.Render.resolveMode(false, "full", "inherit", true, "inherit"), "full")
+eq("resolve instance forces compact", ns.Render.resolveMode(false, "full", "inherit", true, "compact"), "compact")
+eq("resolve instance hide wins", ns.Render.resolveMode(false, "compact", "inherit", true, "hide"), "hide")
+eq("resolve instance setting ignored outside", ns.Render.resolveMode(false, "full", "inherit", false, "hide"), "full")
+eq("resolve combat hide beats instance compact", ns.Render.resolveMode(true, "full", "hide", true, "compact"), "hide")
+eq("resolve instance hide beats combat compact", ns.Render.resolveMode(true, "full", "compact", true, "hide"), "hide")
+
+-- ---- Util.scrubSecret (WoW 12.x secret values) ---------------------------------
+eq("scrubSecret passthrough without API", ns.Util.scrubSecret("player"), "player")
+eq("scrubSecret keeps nil", ns.Util.scrubSecret(nil), nil)
+issecretvalue = function(value) return value == "SECRET" end -- luacheck: ignore 121
+eq("scrubSecret drops secret", ns.Util.scrubSecret("SECRET"), nil)
+eq("scrubSecret keeps plain value", ns.Util.scrubSecret("Player-1234-DEADBEEF"), "Player-1234-DEADBEEF")
+issecretvalue = nil -- luacheck: ignore 121
+
 -- ---- Util.inCombat -------------------------------------------------------------
 check("inCombat false without API", ns.Util.inCombat() == false)
 _G.InCombatLockdown = function() return true end

@@ -117,20 +117,19 @@ function Render.buildCompact(record, enabled, leadingBlank)
 	return ops
 end
 
--- Which rendering a tooltip gets: the base layout normally, with the combat setting able to
--- override it while fighting. Returns "full" | "compact" | "hide". Pure, so it's unit-tested.
-function Render.resolveMode(inCombat, layout, combat)
-	local base = layout == "compact" and "compact" or "full"
-	if not inCombat then
-		return base
-	end
-	if combat == "hide" then
+-- Which rendering a tooltip gets: the base layout normally, with the combat and instance
+-- settings each able to override it ("hide" beats "compact" beats "inherit").
+-- Returns "full" | "compact" | "hide". Pure, so it's unit-tested.
+function Render.resolveMode(inCombat, layout, combat, inInstance, instance)
+	local combatOverride = inCombat and combat or "inherit"
+	local instanceOverride = inInstance and instance or "inherit"
+	if combatOverride == "hide" or instanceOverride == "hide" then
 		return "hide"
 	end
-	if combat == "compact" then
+	if combatOverride == "compact" or instanceOverride == "compact" then
 		return "compact"
 	end
-	return base -- "inherit"
+	return layout == "compact" and "compact" or "full"
 end
 
 function Render.renderInto(tooltip, record, surface)
@@ -138,7 +137,9 @@ function Render.renderInto(tooltip, record, surface)
 		return false
 	end
 
-	local mode = Render.resolveMode(ns.Util.inCombat(), ns.Settings.layoutMode(), ns.Settings.combatMode())
+	local mode = Render.resolveMode(
+		ns.Util.inCombat(), ns.Settings.layoutMode(), ns.Settings.combatMode(),
+		ns.Util.inInstance(), ns.Settings.instanceMode())
 	if mode == "hide" then
 		return false
 	end
