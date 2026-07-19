@@ -87,6 +87,16 @@ function Util.label(text)
 	return Util.colorize(text, LABEL)
 end
 
+-- WoW 12.x hands addons "secret" values in some paths (world-cursor tooltips: unit token,
+-- data.guid) that protected APIs like UnitIsPlayer reject from addon code with a Lua error.
+-- Secrets carry no addon-readable information, so treat them as absent.
+function Util.scrubSecret(value)
+	if value ~= nil and type(issecretvalue) == "function" and issecretvalue(value) then
+		return nil
+	end
+	return value
+end
+
 function Util.inCombat()
 	if type(InCombatLockdown) == "function" and InCombatLockdown() then
 		return true

@@ -88,8 +88,9 @@ local function resolveTarget(contextData)
 	-- Unit / player menus: the character is in name+server, or on the unit token.
 	local name = contextData.name ~= "" and contextData.name or nil
 	local realm = contextData.server ~= "" and contextData.server or nil
-	if not name and contextData.unit and UnitIsPlayer(contextData.unit) then
-		name, realm = UnitName(contextData.unit)
+	local unit = ns.Util.scrubSecret(contextData.unit)
+	if not name and unit and UnitIsPlayer(unit) then
+		name, realm = UnitName(unit)
 	end
 	return finalize(name, realm)
 end

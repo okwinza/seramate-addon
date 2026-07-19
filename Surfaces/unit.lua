@@ -7,8 +7,11 @@ local function onUnitTooltip(tooltip, data)
 		return
 	end
 
+	-- World-cursor tooltips (12.x) fill unit/guid with secret values; scrub them or the
+	-- UnitIsPlayer/GetPlayerInfoByGUID calls below hard-error.
 	local _, unit = tooltip:GetUnit()
-	local guid = (data and data.guid) or (unit and UnitGUID(unit))
+	unit = ns.Util.scrubSecret(unit)
+	local guid = ns.Util.scrubSecret(data and data.guid) or (unit and UnitGUID(unit))
 
 	local name, realm
 	if unit and UnitIsPlayer(unit) then
