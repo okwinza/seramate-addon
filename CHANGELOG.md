@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- The "Copy Profile Link" popup now closes itself once you've copied — on Ctrl+C, or when
+  you click away — instead of needing a separate Escape press. Dragging it to reposition
+  still works.
 - Fix: Lua error `bad argument #1 to 'UnitIsPlayer' … Secret values are only allowed during
   untainted execution` when the game showed a world-cursor tooltip (12.x hands addons
   secret unit/GUID values there; the addon now ignores them).

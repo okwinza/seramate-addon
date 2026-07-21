@@ -392,6 +392,14 @@ eq("scrubSecret drops secret", ns.Util.scrubSecret("SECRET"), nil)
 eq("scrubSecret keeps plain value", ns.Util.scrubSecret("Player-1234-DEADBEEF"), "Player-1234-DEADBEEF")
 issecretvalue = nil -- luacheck: ignore 121
 
+-- ---- Util.isCopyShortcut (Ctrl+C detection for the copy popup) ------------------
+eq("copy shortcut C+ctrl", ns.Util.isCopyShortcut("C", true), true)
+eq("copy shortcut lowercase c+ctrl", ns.Util.isCopyShortcut("c", true), true)
+eq("copy shortcut coerces truthy ctrl (1/nil client)", ns.Util.isCopyShortcut("C", 1), true)
+eq("copy shortcut C without ctrl", ns.Util.isCopyShortcut("C", false), false)
+eq("copy shortcut nil ctrl", ns.Util.isCopyShortcut("C", nil), false)
+eq("copy shortcut other key with ctrl", ns.Util.isCopyShortcut("V", true), false)
+
 -- ---- Util.inCombat -------------------------------------------------------------
 check("inCombat false without API", ns.Util.inCombat() == false)
 _G.InCombatLockdown = function() return true end

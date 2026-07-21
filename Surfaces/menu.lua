@@ -1,7 +1,8 @@
 local _, ns = ...
 
 -- A small read-only frame holding the profile URL for Ctrl+C (WoW can't write the OS
--- clipboard directly). Esc-closable via UISpecialFrames.
+-- clipboard directly). Auto-closes on Ctrl+C or when it loses focus; also Esc-closable
+-- via UISpecialFrames.
 local copyFrame
 
 local function ensureCopyFrame()
@@ -27,7 +28,7 @@ local function ensureCopyFrame()
 
 	local title = frame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 	title:SetPoint("TOP", 0, -16)
-	title:SetText(ns.Util.header("Seramate Profile") .. " — press Ctrl+C, then Esc")
+	title:SetText(ns.Util.header("Seramate Profile") .. " — press Ctrl+C")
 
 	local editBox = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
 	editBox:SetSize(380, 24)
@@ -40,6 +41,23 @@ local function ensureCopyFrame()
 	end)
 	editBox:SetScript("OnEnterPressed", function(self)
 		self:ClearFocus()
+	end)
+	-- Auto-close once copied: Ctrl+C closes immediately (OnKeyUp, so the native copy has
+	-- already run); losing focus to anywhere off the popup closes it too.
+	editBox:SetScript("OnKeyUp", function(self, key)
+		if ns.Util.isCopyShortcut(key, IsControlKeyDown()) then
+			self:ClearFocus()
+			frame:Hide()
+		end
+	end)
+	-- Defer a frame: grabbing the movable frame clears focus on mouse-down (before OnDragStart),
+	-- so hide only when the cursor has actually left the popup, not when dragging it.
+	editBox:SetScript("OnEditFocusLost", function()
+		C_Timer.After(0, function()
+			if not frame:IsMouseOver() then
+				frame:Hide()
+			end
+		end)
 	end)
 	frame.editBox = editBox
 

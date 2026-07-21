@@ -97,6 +97,12 @@ function Util.scrubSecret(value)
 	return value
 end
 
+-- True when a key event is the copy shortcut (Ctrl+C). Pure, so it's unit-tested;
+-- IsControlKeyDown() may return 1/nil on older clients, so coerce.
+function Util.isCopyShortcut(key, isControlDown)
+	return (key == "C" or key == "c") and not not isControlDown
+end
+
 function Util.inCombat()
 	if type(InCombatLockdown) == "function" and InCombatLockdown() then
 		return true
