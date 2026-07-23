@@ -75,8 +75,8 @@ local function bestTitle(record)
 end
 
 -- Compact variant for combat: the same data folded to one line per rating section plus the
--- single best title, no Last Updated. Same enabled() contract as build().
-function Render.buildCompact(record, enabled, leadingBlank)
+-- best title (or all titles while Shift is held), no Last Updated. Same enabled() contract as build().
+function Render.buildCompact(record, enabled, leadingBlank, showAllTitles)
 	local Util = ns.Util
 	local Schema = ns.Schema
 	local ops = {}
@@ -101,9 +101,15 @@ function Render.buildCompact(record, enabled, leadingBlank)
 		end
 	end
 
-	local title = enabled(Schema.titlesRow.key) and bestTitle(record) or nil
-	if title then
-		ops[#ops + 1] = { kind = "line", text = Util.titleText(title.n, title.w) }
+	if enabled(Schema.titlesRow.key) and showAllTitles and type(record.titles) == "table" then
+		for _, title in ipairs(record.titles) do
+			ops[#ops + 1] = { kind = "line", text = Util.titleText(title.n, title.w) }
+		end
+	else
+		local title = enabled(Schema.titlesRow.key) and bestTitle(record) or nil
+		if title then
+			ops[#ops + 1] = { kind = "line", text = Util.titleText(title.n, title.w) }
+		end
 	end
 
 	if #ops == 0 then
@@ -145,8 +151,13 @@ function Render.renderInto(tooltip, record, surface)
 	end
 
 	local hasContent = type(tooltip.NumLines) == "function" and tooltip:NumLines() > 0
-	local builder = mode == "compact" and Render.buildCompact or Render.build
-	local ops = builder(record, ns.Settings.enabler(), hasContent)
+	local ops
+	if mode == "compact" then
+		local showAllTitles = type(IsShiftKeyDown) == "function" and IsShiftKeyDown()
+		ops = Render.buildCompact(record, ns.Settings.enabler(), hasContent, showAllTitles)
+	else
+		ops = Render.build(record, ns.Settings.enabler(), hasContent)
+	end
 	if #ops == 0 then
 		return false
 	end

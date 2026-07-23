@@ -324,6 +324,10 @@ check("compact only best title", countKind(compact, "line") == 1)
 local compactText = flatten(compact)
 contains("compact best title is r1", compactText, "Crimson Gladiator: The War Within Season 3")
 check("compact drops lesser titles", not compactText:find("Duelist", 1, true))
+local compactWithShift = ns.Render.buildCompact(REC, allEnabled, true, true)
+local compactWithShiftText = flatten(compactWithShift)
+check("compact shift shows all titles", countKind(compactWithShift, "line") == 2)
+contains("compact shift includes lesser titles", compactWithShiftText, "Duelist")
 check("compact drops last updated", not compactText:find("7 Jul 2025", 1, true))
 check("compact respects leadingBlank=false", ns.Render.buildCompact(REC, allEnabled, false)[1].kind == "title")
 check("compact all-disabled builds empty", #ns.Render.buildCompact(REC, noneEnabled) == 0)
@@ -334,6 +338,7 @@ contains("compact keeps other brackets", compactNoShuffle, "1840")
 -- titles toggled off -> no title line
 local function titlesDisabled(key) return key ~= "titles" end
 check("compact honors titles toggle", countKind(ns.Render.buildCompact(REC, titlesDisabled), "line") == 0)
+check("compact shift honors titles toggle", countKind(ns.Render.buildCompact(REC, titlesDisabled, true, true), "line") == 0)
 
 -- ---- Settings toggles (per-line + per-surface, default on) --------------------
 check("line default enabled", ns.Settings.isLineEnabled("cur_2v2") == true)

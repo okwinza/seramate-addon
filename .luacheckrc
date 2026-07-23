@@ -25,7 +25,7 @@ read_globals = {
 	"CreateFrame", "GameTooltip", "FriendsTooltip", "UIParent", "UISpecialFrames",
 	"UnitName", "UnitGUID", "UnitIsPlayer", "GetRealmName", "GetNormalizedRealmName",
 	"GetCurrentRegion", "GetPlayerInfoByGUID", "IsInInstance", "InCombatLockdown",
-	"UnitAffectingCombat", "issecretvalue", "IsControlKeyDown",
+	"UnitAffectingCombat", "issecretvalue", "IsControlKeyDown", "IsShiftKeyDown",
 	"C_AddOns", "C_LFGList", "C_BattleNet", "C_Timer",
 	"TooltipDataProcessor", "Enum", "Menu", "Settings",
 	"hooksecurefunc", "EventUtil", "GetMouseFoci",

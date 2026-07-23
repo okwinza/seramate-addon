@@ -96,7 +96,7 @@ Two sets of toggles, all on by default:
 
 Plus two display controls:
 
-- **Layout**: Full (default) or Compact. Compact folds each rating section to a single line and shows only your best title — the same style used in combat, now available all the time.
+- **Layout**: Full (default) or Compact. Compact folds each rating section to a single line and shows only your best title; hold **Shift** while opening and viewing the tooltip to show all titles.
 - **In Combat**: what happens while you're fighting — same as usual (default), force the compact summary, or hide the Seramate block entirely.
 
 `/seramate dbg` (or `/seramate debug`) toggles debug messages on and off.
