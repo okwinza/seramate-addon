@@ -1,13 +1,10 @@
 # Changelog
 
-- Battleground Blitz ratings: current and this-expansion Blitz rows on all tooltips, each
-  with its own Lines toggle, and folded into the compact summary. Characters qualify for
-  the database at 1800+ Blitz (same bar as Solo Shuffle); Blitz data also appears on
-  characters already listed via other brackets. Requires the next daily data refresh.
-- New "Title Colors" settings page (under Seramate PvP Inspect): pick your own color for
-  each title tier — Rank 1, Gladiator, Legend, Elite/Hero, Strategist/Duelist,
-  Rival/Challenger, Combatant — via the standard color picker, with a per-tier Reset back
-  to the default. Applies everywhere titles render (tooltips, LFG, Battle.net, compact).
+- Battleground Blitz ratings: current and this-expansion Blitz rows next to the other
+  brackets, with their own Lines toggles. Characters enter the database at 1800+ Blitz,
+  the same bar as Solo Shuffle.
+- New "Title Colors" settings page: pick your own color for each title tier, with a
+  per-tier reset back to the default.
 
 - The "Copy Profile Link" popup now closes itself once you've copied — on Ctrl+C, or when
   you click away — instead of needing a separate Escape press. Dragging it to reposition

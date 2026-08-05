@@ -153,8 +153,9 @@ jobs:
           set -euo pipefail
           season=$(jq -r '.season' new-manifest.json)
           cutoff=$(jq -r '.cutoff' new-manifest.json)
+          solo=$(jq -r '.shuffleCutoff // 1800' new-manifest.json)
           date=$(jq -r '.generatedAt' new-manifest.json | cut -dT -f1)
-          printf 'Bundled PvP rating snapshot — season %s, updated %s.\n\nRatings and notable titles for **EU and US** characters at **%s+** in any bracket this season (2v2 / 3v3 / Rated Battlegrounds).\n\nUnzip the three folders into Interface/AddOns/ and reload.\n' "$season" "$date" "$cutoff" > notes.md
+          printf 'Bundled PvP rating snapshot — season %s, updated %s.\n\nRatings and notable titles for **EU and US** characters at **%s+** this season in any bracket (2v2 / 3v3 / RBG / Solo Shuffle / Blitz; **%s+** for the solo queues).\n\nUnzip the three folders into Interface/AddOns/ and reload.\n' "$season" "$date" "$cutoff" "$solo" > notes.md
           gh release edit "$TAG" --notes-file notes.md
 
       - name: Attach manifest to the release
