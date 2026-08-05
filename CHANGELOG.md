@@ -1,7 +1,5 @@
 # Changelog
 
-## Unreleased
-
 - New "Title Colors" settings page (under Seramate PvP Inspect): pick your own color for
   each title tier — Rank 1, Gladiator, Legend, Elite/Hero, Strategist/Duelist,
   Rival/Challenger, Combatant — via the standard color picker, with a per-tier Reset back
