@@ -9,7 +9,7 @@
 <p>
   <img src="https://img.shields.io/badge/WoW-Retail-FDA033?style=flat-square&labelColor=0E1013" alt="WoW Retail" />
   <img src="https://img.shields.io/badge/regions-EU%20%7C%20US-FDA033?style=flat-square&labelColor=0E1013" alt="Regions EU and US" />
-  <img src="https://img.shields.io/badge/brackets-2v2%20%7C%203v3%20%7C%20RBG%20%7C%20Shuffle-FDA033?style=flat-square&labelColor=0E1013" alt="Brackets 2v2 3v3 RBG Shuffle" />
+  <img src="https://img.shields.io/badge/brackets-2v2%20%7C%203v3%20%7C%20RBG%20%7C%20Shuffle%20%7C%20Blitz-FDA033?style=flat-square&labelColor=0E1013" alt="Brackets 2v2 3v3 RBG Shuffle Blitz" />
   <img src="https://img.shields.io/badge/data-seramate.com-FDA033?style=flat-square&labelColor=0E1013" alt="Data from seramate.com" />
   <img src="https://img.shields.io/badge/updates-daily-FDA033?style=flat-square&labelColor=0E1013" alt="Updates daily" />
 </p>
@@ -23,7 +23,7 @@
 Hover any player and Seramate PvP Inspect adds their arena and battleground standing to the tooltip. The data comes from Seramate's own PvP ladder database and is bundled into the addon, so lookups are instant and work fully offline while you play.
 
 <table>
-<tr><td><b>Current rating</b></td><td>2v2, 3v3, Rated Battlegrounds, and Solo Shuffle</td></tr>
+<tr><td><b>Current rating</b></td><td>2v2, 3v3, Rated Battlegrounds, Solo Shuffle, and Battleground Blitz</td></tr>
 <tr><td><b>This-expansion peak</b></td><td>the highest rating hit in each bracket</td></tr>
 <tr><td><b>Notable titles</b></td><td>the character's top titles, colored by prestige tier</td></tr>
 <tr><td><b>Tier-colored ratings</b></td><td>green, blue, purple, and orange, so skill reads at a glance</td></tr>
@@ -91,7 +91,7 @@ Type **`/seramate`** (or the shorter **`/sera`** or **`/sm`**) to open settings.
 
 Two sets of toggles, all on by default:
 
-- **Lines**: which rows appear. Current 2v2 / 3v3 / RBG / Shuffle, this-expansion 2v2 / 3v3 / RBG / Shuffle, Titles, and Last Updated.
+- **Lines**: which rows appear. Current 2v2 / 3v3 / RBG / Shuffle / Blitz, this-expansion 2v2 / 3v3 / RBG / Shuffle / Blitz, Titles, and Last Updated.
 - **Surfaces**: which tooltips the addon hooks. Character tooltip, LFG / Premade Groups, and Battle.net friends.
 
 Plus display controls:
@@ -105,7 +105,7 @@ Plus display controls:
 
 ## Coverage and data
 
-- **EU and US** characters who reached at least **1500** rating in any bracket this season (**1800** for Solo Shuffle).
+- **EU and US** characters who reached at least **1500** rating in any bracket this season (**1800** for Solo Shuffle and Battleground Blitz).
 - Data is bundled into the addon, so lookups are local with no network calls.
 - Refreshed by new releases, published daily when the ladder changes.
 

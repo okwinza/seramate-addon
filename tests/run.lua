@@ -120,8 +120,8 @@ check("split no realm", n3 == "SoloName" and r3 == nil)
 
 -- ---- Keys.lookup (dual-faction + realm resolution) ---------------------------
 local REC = {
-	cur = { v2 = 1840, v3 = 1875, sh = 2405 },
-	exp = { v2 = 2010, v3 = 2055, sh = 2450 },
+	cur = { v2 = 1840, v3 = 1875, sh = 2405, bz = 2115 },
+	exp = { v2 = 2010, v3 = 2055, sh = 2450, bz = 2180 },
 	titles = {
 		{ n = "Crimson Gladiator: The War Within Season 3", w = 100 },
 		{ n = "Duelist: Dragonflight Season 4", w = 50 },
@@ -173,12 +173,13 @@ ns.DB.HORDE["Old-Tarren Mill"] = { cur = { v2 = 1600 }, titles = LEGACY_TITLES, 
 check("legacy titles table untouched", ns.Keys.lookup("Old", "Tarren Mill").titles == LEGACY_TITLES)
 
 -- ---- Keys.lookup lazy bracket decode (c/e pack the rating maps as strings) -----
-local PACKED = { c = "v2=1846,v3=2509,sh=2955", e = "v2=2010", t = "1", upd = 20250707 }
+local PACKED = { c = "v2=1846,v3=2509,sh=2955,bz=2410", e = "v2=2010", t = "1", upd = 20250707 }
 local BARE = { upd = 20250101 }
 ns.DB.HORDE["Packed-Tarren Mill"] = PACKED
 ns.DB.HORDE["Bare-Tarren Mill"] = BARE
 local packed = ns.Keys.lookup("Packed", "Tarren Mill")
 check("bracket decode all pairs", packed.cur.v2 == 1846 and packed.cur.v3 == 2509 and packed.cur.sh == 2955)
+check("bracket decode blitz", packed.cur.bz == 2410)
 check("bracket decode numbers not strings", type(packed.cur.v2) == "number")
 check("bracket decode exp separate", packed.exp.v2 == 2010 and packed.exp.v3 == nil)
 check("bracket decode memoizes", ns.Keys.lookup("Packed", "Tarren Mill").cur == packed.cur)
@@ -189,6 +190,7 @@ check("legacy cur table untouched", ns.Keys.lookup("Old", "Tarren Mill").cur.v2 
 local packedText = flatten(ns.Render.build(packed, allEnabled))
 contains("packed cur rating renders", packedText, "1846")
 contains("packed shuffle renders", packedText, "2955")
+contains("packed blitz renders", packedText, "2410")
 contains("packed exp renders", packedText, "2010")
 
 -- ---- Guard.claim -------------------------------------------------------------
@@ -297,6 +299,16 @@ local schemaKeys = table.concat(ns.Schema.keys(), ",")
 contains("panel exposes cur_shuffle", schemaKeys, "cur_shuffle")
 contains("panel exposes exp_shuffle", schemaKeys, "exp_shuffle")
 
+-- ---- Blitz bracket rows --------------------------------------------------------
+contains("build cur blitz", text, "2115")
+contains("build exp blitz", text, "2180")
+local function blitzDisabled(key) return key ~= "cur_blitz" and key ~= "exp_blitz" end
+local noBlitzText = flatten(ns.Render.build(REC, blitzDisabled))
+check("blitz toggles hide blitz lines", not noBlitzText:find("Blitz", 1, true))
+contains("other lines survive blitz toggle", noBlitzText, "2405")
+contains("panel exposes cur_blitz", schemaKeys, "cur_blitz")
+contains("panel exposes exp_blitz", schemaKeys, "exp_blitz")
+
 -- sparsity: only cur + upd present
 local SPARSE = { cur = { v3 = 1875 }, exp = {}, titles = {}, upd = 20250101 }
 local sparseText = flatten(ns.Render.build(SPARSE, allEnabled))
@@ -304,6 +316,7 @@ contains("sparse has cur", sparseText, "1875")
 check("sparse has no expansion section", not sparseText:find("This Expansion:", 1, true))
 check("sparse has no titles section", not sparseText:find("Titles:", 1, true))
 check("no shuffle line without sh data", not sparseText:find("Shuffle", 1, true))
+check("no blitz line without bz data", not sparseText:find("Blitz", 1, true))
 
 -- everything disabled -> nothing renders
 check("all-disabled builds empty", #ns.Render.build(REC, noneEnabled) == 0)
@@ -319,6 +332,7 @@ local _, compactExp = findDouble(compact, "Exp:", "2010")
 check("compact current section folded", compactCur ~= nil)
 check("compact exp section folded", compactExp ~= nil)
 contains("compact current includes shuffle", compactCur and compactCur.right or "", "2405")
+contains("compact current includes blitz", compactCur and compactCur.right or "", "2115")
 contains("compact shuffle tier-colored", compactCur and compactCur.right or "", ns.Colors.rating[2].color)
 check("compact only best title", countKind(compact, "line") == 1)
 local compactText = flatten(compact)

@@ -16,11 +16,13 @@ Schema.rows = {
 	{ key = "cur_3v3", section = "Current Rating", label = "3v3", src = "cur", bracket = "v3" },
 	{ key = "cur_rbg", section = "Current Rating", label = "RBG", src = "cur", bracket = "rbg" },
 	{ key = "cur_shuffle", section = "Current Rating", label = "Shuffle", src = "cur", bracket = "sh" },
+	{ key = "cur_blitz", section = "Current Rating", label = "Blitz", src = "cur", bracket = "bz" },
 
 	{ key = "exp_2v2", section = "This Expansion", label = "2v2", src = "exp", bracket = "v2" },
 	{ key = "exp_3v3", section = "This Expansion", label = "3v3", src = "exp", bracket = "v3" },
 	{ key = "exp_rbg", section = "This Expansion", label = "RBG", src = "exp", bracket = "rbg" },
 	{ key = "exp_shuffle", section = "This Expansion", label = "Shuffle", src = "exp", bracket = "sh" },
+	{ key = "exp_blitz", section = "This Expansion", label = "Blitz", src = "exp", bracket = "bz" },
 }
 
 Schema.titlesRow = { key = "titles", label = "Titles" }

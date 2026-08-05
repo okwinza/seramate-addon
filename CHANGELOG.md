@@ -1,5 +1,9 @@
 # Changelog
 
+- Battleground Blitz ratings: current and this-expansion Blitz rows on all tooltips, each
+  with its own Lines toggle, and folded into the compact summary. Characters qualify for
+  the database at 1800+ Blitz (same bar as Solo Shuffle); Blitz data also appears on
+  characters already listed via other brackets. Requires the next daily data refresh.
 - New "Title Colors" settings page (under Seramate PvP Inspect): pick your own color for
   each title tier — Rank 1, Gladiator, Legend, Elite/Hero, Strategist/Duelist,
   Rival/Challenger, Combatant — via the standard color picker, with a per-tier Reset back
