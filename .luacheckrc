@@ -27,7 +27,7 @@ read_globals = {
 	"GetCurrentRegion", "GetPlayerInfoByGUID", "IsInInstance", "InCombatLockdown",
 	"UnitAffectingCombat", "issecretvalue", "IsControlKeyDown", "IsShiftKeyDown",
 	"C_AddOns", "C_LFGList", "C_BattleNet", "C_Timer",
-	"TooltipDataProcessor", "Enum", "Menu", "Settings",
+	"TooltipDataProcessor", "Enum", "Menu", "Settings", "ColorPickerFrame",
 	"hooksecurefunc", "EventUtil", "GetMouseFoci",
 	"LFGListSearchEntry_OnEnter", "LFGListApplicantMember_OnEnter",
 	"BackdropTemplateMixin", "CreateColor", "wipe", "tinsert",

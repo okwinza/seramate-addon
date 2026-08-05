@@ -350,6 +350,45 @@ check("surface toggled off", ns.Settings.isSurfaceEnabled("bnet") == false)
 check("line/surface scopes independent", ns.Settings.isLineEnabled("bnet") == true)
 check("enabler reflects line toggles", ns.Settings.enabler()("titles") == false)
 
+-- ---- Title color overrides (tier keys in Data/colors.lua + Settings + Util) -----
+local tiersHaveIdentity = true
+for _, tier in ipairs(ns.Colors.title) do
+	if type(tier.key) ~= "string" or type(tier.label) ~= "string" then tiersHaveIdentity = false end
+end
+check("every title tier carries key+label", tiersHaveIdentity)
+local paletteOk = ns.Util.isHexColor(ns.Colors.header) and ns.Util.isHexColor(ns.Colors.section)
+	and ns.Util.isHexColor(ns.Colors.label)
+for _, tier in ipairs(ns.Colors.rating) do
+	paletteOk = paletteOk and ns.Util.isHexColor(tier.color)
+end
+for _, tier in ipairs(ns.Colors.title) do
+	paletteOk = paletteOk and ns.Util.isHexColor(tier.color)
+end
+check("palette colors are all valid hex (overrides layer on these)", paletteOk)
+check("titleColor defaults to nil (palette)", ns.Settings.titleColor("legend") == nil)
+ns.Settings.setTitleColor("rank1", "ff00ff")
+eq("titleColor stores override", ns.Settings.titleColor("rank1"), "ff00ff")
+contains("titleText uses override", ns.Util.titleText("Crimson Gladiator", 100), "ff00ff")
+contains("other tiers keep palette color", ns.Util.titleText("Gladiator", 90), ns.Colors.title[2].color)
+contains("build renders overridden color", flatten(ns.Render.build(REC, allEnabled)), "ff00ff")
+ns.Settings.setTitleColor("rank1", nil)
+contains("clearing override restores palette", ns.Util.titleText("R1", 100), ns.Colors.title[1].color)
+ns.Settings.setTitleColor("elite", "not-hex")
+check("junk color rejected on write", ns.Settings.titleColor("elite") == nil)
+SeramateSettings.titleColors = { duelist = "|cff00ff00" }
+check("stored junk sanitized on read", ns.Settings.titleColor("duelist") == nil)
+contains("stored junk falls back to palette", ns.Util.titleText("Duelist", 50), ns.Colors.title[5].color)
+SeramateSettings.titleColors = nil
+
+-- ---- Util hex <-> rgb (color picker plumbing) -----------------------------------
+local hr, hg, hb = ns.Util.hexToRgb("ff8000")
+check("hexToRgb components", hr == 1 and hb == 0 and math.abs(hg - 128 / 255) < 1e-6)
+eq("rgbToHex roundtrip", ns.Util.rgbToHex(ns.Util.hexToRgb("34fedc")), "34fedc")
+check("hexToRgb rejects malformed", ns.Util.hexToRgb("34fed") == nil and ns.Util.hexToRgb("zzzzzz") == nil)
+eq("rgbToHex clamps out-of-range", ns.Util.rgbToHex(2, -1, 0.5), "ff0080")
+check("isHexColor accepts uppercase", ns.Util.isHexColor("FFD100") == true)
+check("isHexColor rejects escape prefix", ns.Util.isHexColor("|cffffd100") == false)
+
 -- ---- Layout mode setting -------------------------------------------------------
 eq("layout mode defaults to full", ns.Settings.layoutMode(), "full")
 ns.Settings.setLayoutMode("compact")

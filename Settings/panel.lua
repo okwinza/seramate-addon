@@ -37,6 +37,24 @@ function Settings_.enabler()
 	return Settings_.isLineEnabled
 end
 
+-- Per-tier title color overrides ("RRGGBB"), keyed by the tier keys in Data/colors.lua.
+-- Absent means the palette default; malformed values (hand-edited SavedVariables) are
+-- treated as absent rather than leaking a broken escape code into the tooltip.
+function Settings_.titleColor(key)
+	local overrides = SeramateSettings and SeramateSettings.titleColors
+	local value = overrides and overrides[key]
+	if ns.Util.isHexColor(value) then
+		return value
+	end
+	return nil
+end
+
+function Settings_.setTitleColor(key, rgb)
+	SeramateSettings = SeramateSettings or {}
+	SeramateSettings.titleColors = SeramateSettings.titleColors or {}
+	SeramateSettings.titleColors[key] = ns.Util.isHexColor(rgb) and rgb or nil
+end
+
 -- The base tooltip layout, applied both in and out of combat (combat can override it below).
 local LAYOUT_MODES = { full = true, compact = true }
 
@@ -169,9 +187,9 @@ end
 -- A scrollable content frame filling the canvas. The Settings canvas layout does not scroll
 -- on its own, and our controls are taller than the viewport, so widgets are parented to this
 -- child (not the panel) and the child grows to fit. Returns panel, content, setContentHeight.
-local function buildScrollableCanvas()
+local function buildScrollableCanvas(name)
 	local panel = CreateFrame("Frame")
-	panel.name = "Seramate PvP Inspect"
+	panel.name = name
 
 	local scroll = CreateFrame("ScrollFrame", nil, panel, "UIPanelScrollFrameTemplate")
 	scroll:SetPoint("TOPLEFT", 3, -3)
@@ -193,7 +211,7 @@ local function buildScrollableCanvas()
 end
 
 local function buildCanvas()
-	local panel, content, setContentHeight = buildScrollableCanvas()
+	local panel, content, setContentHeight = buildScrollableCanvas("Seramate PvP Inspect")
 
 	local title = content:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
 	title:SetPoint("TOPLEFT", 16, -16)
@@ -233,6 +251,98 @@ local function buildCanvas()
 	return panel
 end
 
+-- Open the standard color picker primed with a tier's effective color. swatchFunc fires
+-- continuously while dragging, so the tooltip preview is live; cancel restores whatever
+-- override (or absence of one) existed before opening. Picking the palette default clears
+-- the override instead of storing a redundant copy of it.
+local function openTitleColorPicker(tier, anchor, onChanged)
+	if type(ColorPickerFrame) ~= "table" or type(ColorPickerFrame.SetupColorPickerAndShow) ~= "function" then
+		return
+	end
+
+	-- The AceGUI/DBM dance: close a picker another swatch left open (plain Hide() does not
+	-- fire cancelFunc), and raise above the Settings panel, which the picker's default
+	-- strata is not guaranteed to clear.
+	ColorPickerFrame:Hide()
+	ColorPickerFrame:SetFrameStrata("FULLSCREEN_DIALOG")
+	ColorPickerFrame:SetFrameLevel(anchor:GetFrameLevel() + 10)
+	ColorPickerFrame:SetClampedToScreen(true)
+
+	local previous = Settings_.titleColor(tier.key)
+	local r, g, b = ns.Util.hexToRgb(previous or tier.color)
+	ColorPickerFrame:SetupColorPickerAndShow({
+		r = r, g = g, b = b,
+		hasOpacity = false,
+		swatchFunc = function()
+			local hex = ns.Util.rgbToHex(ColorPickerFrame:GetColorRGB())
+			Settings_.setTitleColor(tier.key, hex ~= tier.color and hex or nil)
+			onChanged()
+		end,
+		cancelFunc = function()
+			Settings_.setTitleColor(tier.key, previous)
+			onChanged()
+		end,
+	})
+end
+
+-- One tier row on the Title Colors page: a clickable swatch, the tier label doubling as a
+-- live preview in the effective color, and a Reset button shown only while overridden.
+local function addTitleColorRow(content, tier, y)
+	local swatch = CreateFrame("Button", nil, content)
+	swatch:SetSize(18, 18)
+	swatch:SetPoint("TOPLEFT", 20, y - 3)
+	local color = swatch:CreateTexture(nil, "OVERLAY")
+	color:SetTexture("Interface\\ChatFrame\\ChatFrameColorSwatch")
+	color:SetAllPoints()
+
+	local label = content:CreateFontString(nil, "ARTWORK", "GameFontHighlight")
+	label:SetPoint("LEFT", swatch, "RIGHT", 8, 0)
+
+	local reset = CreateFrame("Button", nil, content, "UIPanelButtonTemplate")
+	reset:SetSize(64, 20)
+	reset:SetPoint("TOPLEFT", 220, y - 2)
+	reset:SetText("Reset")
+
+	local function refresh()
+		local hex = Settings_.titleColor(tier.key) or tier.color
+		color:SetVertexColor(ns.Util.hexToRgb(hex))
+		label:SetText("|cff" .. hex .. tier.label .. "|r")
+		reset:SetShown(Settings_.titleColor(tier.key) ~= nil)
+	end
+
+	swatch:SetScript("OnClick", function()
+		openTitleColorPicker(tier, swatch, refresh)
+	end)
+	reset:SetScript("OnClick", function()
+		Settings_.setTitleColor(tier.key, nil)
+		refresh()
+	end)
+
+	refresh()
+	return y - 26
+end
+
+local function buildTitleColorsCanvas()
+	local panel, content, setContentHeight = buildScrollableCanvas("Title Colors")
+
+	local title = content:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+	title:SetPoint("TOPLEFT", 16, -16)
+	title:SetText("Title Colors")
+
+	local sub = content:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+	sub:SetPoint("TOPLEFT", title, "BOTTOMLEFT", 0, -6)
+	sub:SetText("Click a swatch to recolor that title tier everywhere titles are shown.")
+
+	local y = -64
+	y = addSectionHeader(content, "Tiers (highest first)", y)
+	for _, tier in ipairs(ns.Colors.title) do
+		y = addTitleColorRow(content, tier, y)
+	end
+
+	setContentHeight(y)
+	return panel
+end
+
 local function registerPanel()
 	if type(Settings) ~= "table" or type(Settings.RegisterCanvasLayoutCategory) ~= "function" then
 		return
@@ -242,6 +352,9 @@ local function registerPanel()
 	-- string makes GetID() return that string, which OpenToCategory (C_SettingsUtil.OpenSettingsPanel)
 	-- rejects as out-of-int-range. Keep the framework's id; store the category and read it at open time.
 	local category = Settings.RegisterCanvasLayoutCategory(panel, "Seramate PvP Inspect")
+	if type(Settings.RegisterCanvasLayoutSubcategory) == "function" then
+		Settings.RegisterCanvasLayoutSubcategory(category, buildTitleColorsCanvas(), "Title Colors")
+	end
 	Settings.RegisterAddOnCategory(category)
 	Settings_._category = category
 end

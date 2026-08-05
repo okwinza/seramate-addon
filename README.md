@@ -94,10 +94,12 @@ Two sets of toggles, all on by default:
 - **Lines**: which rows appear. Current 2v2 / 3v3 / RBG / Shuffle, this-expansion 2v2 / 3v3 / RBG / Shuffle, Titles, and Last Updated.
 - **Surfaces**: which tooltips the addon hooks. Character tooltip, LFG / Premade Groups, and Battle.net friends.
 
-Plus two display controls:
+Plus display controls:
 
 - **Layout**: Full (default) or Compact. Compact folds each rating section to a single line and shows only your best title; hold **Shift** while opening and viewing the tooltip to show all titles.
 - **In Combat**: what happens while you're fighting — same as usual (default), force the compact summary, or hide the Seramate block entirely.
+- **In Instances**: the same choices for arenas, battlegrounds, dungeons and raids.
+- **Title Colors** (its own settings page): pick your own color for each title tier, with a per-tier reset back to the defaults.
 
 `/seramate dbg` (or `/seramate debug`) toggles debug messages on and off.
 

@@ -13,13 +13,16 @@ ns.Colors = {
 		{ min = 1750, color = "1eff00" },
 		{ min = 0,    color = "ffffff" },
 	},
-	title = { -- by PvpTitleAchievement weight; highest first, first match wins
-		{ min = 92, color = "ffd100" }, -- Rank 1 (arena / shuffle / blitz)
-		{ min = 90, color = "ff8000" }, -- Gladiator
-		{ min = 70, color = "34fedc" }, -- Legend
-		{ min = 65, color = "34fedc" }, -- Elite (and Hero of the Alliance/Horde, weight 66)
-		{ min = 50, color = "0070dd" }, -- Strategist / Duelist
-		{ min = 40, color = "1eff00" }, -- Rival / Challenger
-		{ min = 0,  color = "9d9d9d" }, -- Combatant
+	-- By PvpTitleAchievement weight; highest first, first match wins. `key` is the stable
+	-- identity the per-tier color override is stored under (SeramateSettings.titleColors),
+	-- `label` is what the Title Colors settings page shows — colors here are the defaults.
+	title = {
+		{ min = 92, key = "rank1", label = "Rank 1", color = "ffd100" }, -- arena / shuffle / blitz
+		{ min = 90, key = "gladiator", label = "Gladiator", color = "ff8000" },
+		{ min = 70, key = "legend", label = "Legend", color = "34fedc" },
+		{ min = 65, key = "elite", label = "Elite / Hero", color = "34fedc" }, -- Hero of the Alliance/Horde is weight 66
+		{ min = 50, key = "duelist", label = "Strategist / Duelist", color = "0070dd" },
+		{ min = 40, key = "rival", label = "Rival / Challenger", color = "1eff00" },
+		{ min = 0,  key = "combatant", label = "Combatant", color = "9d9d9d" },
 	},
 }

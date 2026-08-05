@@ -13,7 +13,7 @@ end
 local function tierRamp(list)
 	local ramp = {}
 	for _, tier in ipairs(list or {}) do
-		ramp[#ramp + 1] = { min = tier.min, color = esc(tier.color) }
+		ramp[#ramp + 1] = { min = tier.min, key = tier.key, color = esc(tier.color) }
 	end
 	return ramp
 end
@@ -46,10 +46,21 @@ function Util.ratingText(rating)
 	return Util.colorize(tostring(rating), Util.ratingColor(rating))
 end
 
+-- A user override from the Title Colors settings page wins over the palette default.
+-- Resolved per call, not at load: panel.lua (ns.Settings) loads after this file, and the
+-- override can change any time the settings page is open.
+local function tierColor(tier)
+	local override = tier.key and ns.Settings and ns.Settings.titleColor(tier.key)
+	if override then
+		return esc(override)
+	end
+	return tier.color
+end
+
 function Util.titleColor(weight)
 	for _, tier in ipairs(TITLE_TIERS) do
 		if weight >= tier.min then
-			return tier.color
+			return tierColor(tier)
 		end
 	end
 	return LABEL
@@ -57,6 +68,30 @@ end
 
 function Util.titleText(name, weight)
 	return Util.colorize(name, Util.titleColor(weight or 0))
+end
+
+-- A color as the settings store it: exactly six hex digits ("RRGGBB", no escape prefix).
+function Util.isHexColor(value)
+	return type(value) == "string" and value:find("^%x%x%x%x%x%x$") ~= nil
+end
+
+-- "RRGGBB" -> 0-1 floats (the color picker's format); nil when malformed.
+function Util.hexToRgb(hex)
+	if not Util.isHexColor(hex) then
+		return nil
+	end
+	return tonumber(hex:sub(1, 2), 16) / 255,
+		tonumber(hex:sub(3, 4), 16) / 255,
+		tonumber(hex:sub(5, 6), 16) / 255
+end
+
+-- 0-1 floats -> "rrggbb", clamped so picker jitter can't produce an invalid store value.
+function Util.rgbToHex(r, g, b)
+	local function byte(value)
+		value = math.floor((tonumber(value) or 0) * 255 + 0.5)
+		return math.max(0, math.min(255, value))
+	end
+	return string.format("%02x%02x%02x", byte(r), byte(g), byte(b))
 end
 
 -- `upd` is a YYYYMMDD integer; render a friendly, locale-free date ("7 Jul 2025").

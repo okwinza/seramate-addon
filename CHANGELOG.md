@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- New "Title Colors" settings page (under Seramate PvP Inspect): pick your own color for
+  each title tier — Rank 1, Gladiator, Legend, Elite/Hero, Strategist/Duelist,
+  Rival/Challenger, Combatant — via the standard color picker, with a per-tier Reset back
+  to the default. Applies everywhere titles render (tooltips, LFG, Battle.net, compact).
+
 - The "Copy Profile Link" popup now closes itself once you've copied — on Ctrl+C, or when
   you click away — instead of needing a separate Escape press. Dragging it to reposition
   still works.
