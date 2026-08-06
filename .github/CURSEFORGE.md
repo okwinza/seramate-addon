@@ -75,4 +75,4 @@ Type **`/seramate`** (or the shorter **`/sera`** or **`/sm`**) to open settings.
 
 If you'd like to help keep Seramate growing — and pick up a few perks along the way — check out our [Patreon page](https://seramate.com/patreon).
 
-[![Become a patron](https://cdn.seramate.com/addon/assets/patreon-button.png)](https://seramate.com/patreon)
+<a href="https://seramate.com/patreon"><img src="https://cdn.seramate.com/addon/assets/patreon-button.png" width="352" alt="Become a patron"></a>
