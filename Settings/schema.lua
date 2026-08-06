@@ -33,6 +33,7 @@ Schema.surfaces = {
 	{ key = "unit", label = "Character tooltip" },
 	{ key = "lfg", label = "LFG / Premade Groups" },
 	{ key = "bnet", label = "Battle.net friends" },
+	{ key = "guild", label = "Guild & Communities" },
 }
 
 -- Right-hand tooltip text for a bracket row (rating), or nil when there's no data for it.

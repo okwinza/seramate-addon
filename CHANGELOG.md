@@ -1,5 +1,8 @@
 # Changelog
 
+- Guild & Communities: hovering a roster member shows their ratings — including the
+  expanded Roster view, where the stock UI shows no tooltip at all. Own toggle under
+  Surfaces.
 - Battleground Blitz ratings: current and this-expansion Blitz rows next to the other
   brackets, with their own Lines toggles. Characters enter the database at 1800+ Blitz,
   the same bar as Solo Shuffle.

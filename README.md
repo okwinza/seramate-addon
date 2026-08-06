@@ -66,6 +66,11 @@ Group leaders in the Premade Groups results, and applicants to your own group.
 
 Online friends currently playing WoW, on the friends-list tooltip.
 
+### Guild & Communities
+
+Members in the guild panel and WoW communities, on the roster hover tooltip — including
+the expanded Roster view, where the stock UI shows no tooltip at all.
+
 ## Copy Seramate Profile
 
 Want to look someone up on seramate.com? Right-click them and hit **Copy Profile Link** — their profile URL is ready to paste.
@@ -92,7 +97,7 @@ Type **`/seramate`** (or the shorter **`/sera`** or **`/sm`**) to open settings.
 Two sets of toggles, all on by default:
 
 - **Lines**: which rows appear. Current 2v2 / 3v3 / RBG / Shuffle / Blitz, this-expansion 2v2 / 3v3 / RBG / Shuffle / Blitz, Titles, and Last Updated.
-- **Surfaces**: which tooltips the addon hooks. Character tooltip, LFG / Premade Groups, and Battle.net friends.
+- **Surfaces**: which tooltips the addon hooks. Character tooltip, LFG / Premade Groups, Battle.net friends, and Guild & Communities.
 
 Plus display controls:
 

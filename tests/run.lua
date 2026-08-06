@@ -468,6 +468,110 @@ check("inCombat via UnitAffectingCombat", ns.Util.inCombat() == true)
 _G.UnitAffectingCombat = function() return false end
 check("inCombat false out of combat", ns.Util.inCombat() == false)
 
+-- ---- Guild surface (Surfaces/guild.lua against stubbed Communities UI) --------
+_G.hooksecurefunc = function(tbl, name, fn)
+	local original = tbl[name]
+	tbl[name] = function(...)
+		original(...)
+		fn(...)
+	end
+end
+_G.Enum = { ClubType = { BattleNet = 0, Character = 1, Guild = 2 } }
+
+local function fakeGameTooltip()
+	local t = { lines = {}, shown = false }
+	function t:SetOwner(owner) self.owner = owner; self.lines = {}; self.shown = false end
+	function t:GetOwner() return self.owner end
+	function t:IsShown() return self.shown end
+	function t:Show() self.shown = true end
+	function t:Hide()
+		self.shown = false
+		if self._hide then self._hide(self) end
+	end
+	function t:AddLine(text) self.lines[#self.lines + 1] = text or "" end
+	function t:AddDoubleLine(left, right) self.lines[#self.lines + 1] = (left or "") .. "\t" .. (right or "") end
+	function t:NumLines() return #self.lines end
+	function t:HookScript(evt, fn) if evt == "OnHide" then self._hide = fn end end
+	function t:text() return table.concat(self.lines, "\n") end
+	return t
+end
+
+local blizzardEnters = 0
+_G.CommunitiesMemberListEntryMixin = { OnEnter = function() blizzardEnters = blizzardEnters + 1 end }
+load("Surfaces/guild.lua") -- no EventUtil stub, so the hook installs immediately
+
+local function fakeEntry(name, clubType)
+	return {
+		GetMemberInfo = function() return { name = name } end,
+		GetMemberList = function()
+			return { GetSelectedClubInfo = function()
+				if clubType == nil then
+					return nil
+				end
+				return { clubType = clubType }
+			end }
+		end,
+	}
+end
+
+local hasGuildSurface = false
+for _, surface in ipairs(ns.Schema.surfaces) do
+	if surface.key == "guild" then hasGuildSurface = true end
+end
+check("guild surface registered in schema", hasGuildSurface)
+check("guild surface default enabled", ns.Settings.isSurfaceEnabled("guild") == true)
+
+ns.DB = { HORDE = { ["Guildie-Tarren Mill"] = { cur = { v2 = 1990 } } }, ALLIANCE = {} }
+local enter = _G.CommunitiesMemberListEntryMixin.OnEnter
+
+-- unknown character: hook runs (blizzard's handler intact) but touches nothing
+_G.GameTooltip = fakeGameTooltip()
+enter(fakeEntry("Nobody-Tarren Mill", _G.Enum.ClubType.Guild))
+check("guild hook still calls blizzard's OnEnter", blizzardEnters == 1)
+check("guild unknown char adds nothing", _G.GameTooltip:NumLines() == 0 and _G.GameTooltip:GetOwner() == nil)
+
+-- compact member list: blizzard's tooltip is up for the row; we append below it
+local tip = fakeGameTooltip()
+_G.GameTooltip = tip
+local row = fakeEntry("Guildie-Tarren Mill", _G.Enum.ClubType.Guild)
+tip:SetOwner(row); tip:AddLine("Guildie-Tarren Mill"); tip:Show()
+enter(row)
+check("guild keeps blizzard's name line", tip.lines[1] == "Guildie-Tarren Mill")
+contains("guild appends header", tip:text(), "Seramate")
+contains("guild appends rating", tip:text(), "1990")
+check("guild tooltip still shown", tip:IsShown() == true)
+
+-- expanded roster view: blizzard showed nothing; we build owner + name + ratings.
+-- Same-realm member, so the name carries no realm suffix (GetRealmName fallback).
+tip = fakeGameTooltip()
+_G.GameTooltip = tip
+row = fakeEntry("Guildie", _G.Enum.ClubType.Guild)
+enter(row)
+check("guild expanded builds own tooltip", tip:GetOwner() == row)
+check("guild expanded first line is the name", tip.lines[1] == "Guildie")
+contains("guild expanded renders rating", tip:text(), "1990")
+check("guild expanded shows tooltip", tip:IsShown() == true)
+
+-- missing club info counts as a guild (blizzard's own convention)
+tip = fakeGameTooltip()
+_G.GameTooltip = tip
+enter(fakeEntry("Guildie", nil))
+contains("guild nil club info renders", tip:text(), "1990")
+
+-- battle.net communities list battletags, never characters
+tip = fakeGameTooltip()
+_G.GameTooltip = tip
+enter(fakeEntry("Guildie-Tarren Mill", _G.Enum.ClubType.BattleNet))
+check("guild skips battle.net clubs", tip:NumLines() == 0 and tip:GetOwner() == nil)
+
+-- surface toggled off: the self-built tooltip must not linger as a bare name line
+ns.Settings.set("guild", "surfaces", false)
+tip = fakeGameTooltip()
+_G.GameTooltip = tip
+enter(fakeEntry("Guildie", _G.Enum.ClubType.Guild))
+check("guild surface off leaves no bare tooltip", tip:IsShown() == false)
+ns.Settings.set("guild", "surfaces", true)
+
 -- ---- summary -----------------------------------------------------------------
 print(string.format("\n%d passed, %d failed", passed, failed))
 os.exit(failed == 0 and 0 or 1)

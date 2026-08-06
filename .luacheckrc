@@ -28,7 +28,7 @@ read_globals = {
 	"UnitAffectingCombat", "issecretvalue", "IsControlKeyDown", "IsShiftKeyDown",
 	"C_AddOns", "C_LFGList", "C_BattleNet", "C_Timer",
 	"TooltipDataProcessor", "Enum", "Menu", "Settings", "ColorPickerFrame",
-	"hooksecurefunc", "EventUtil", "GetMouseFoci",
+	"hooksecurefunc", "EventUtil", "GetMouseFoci", "CommunitiesMemberListEntryMixin",
 	"LFGListSearchEntry_OnEnter", "LFGListApplicantMember_OnEnter",
 	"BackdropTemplateMixin", "CreateColor", "wipe", "tinsert",
 	"FRIENDS_BUTTON_TYPE_BNET", "BNET_CLIENT_WOW",
