@@ -7,11 +7,11 @@
 <p><em>See any player's PvP ratings and notable titles, right on their in-game tooltip.</em></p>
 
 <p>
-  <img src="https://img.shields.io/badge/WoW-Retail-FDA033?style=flat-square&labelColor=0E1013" alt="WoW Retail" />
-  <img src="https://img.shields.io/badge/regions-EU%20%7C%20US-FDA033?style=flat-square&labelColor=0E1013" alt="Regions EU and US" />
-  <img src="https://img.shields.io/badge/brackets-2v2%20%7C%203v3%20%7C%20RBG%20%7C%20Shuffle%20%7C%20Blitz-FDA033?style=flat-square&labelColor=0E1013" alt="Brackets 2v2 3v3 RBG Shuffle Blitz" />
-  <img src="https://img.shields.io/badge/data-seramate.com-FDA033?style=flat-square&labelColor=0E1013" alt="Data from seramate.com" />
-  <img src="https://img.shields.io/badge/updates-daily-FDA033?style=flat-square&labelColor=0E1013" alt="Updates daily" />
+  <img src="https://img.shields.io/badge/WoW-Retail-FFB347?style=flat-square&labelColor=0E1013" alt="WoW Retail" />
+  <img src="https://img.shields.io/badge/regions-EU%20%7C%20US-FFB347?style=flat-square&labelColor=0E1013" alt="Regions EU and US" />
+  <img src="https://img.shields.io/badge/brackets-2v2%20%7C%203v3%20%7C%20RBG%20%7C%20Shuffle%20%7C%20Blitz-FFB347?style=flat-square&labelColor=0E1013" alt="Brackets 2v2 3v3 RBG Shuffle Blitz" />
+  <img src="https://img.shields.io/badge/data-seramate.com-FFB347?style=flat-square&labelColor=0E1013" alt="Data from seramate.com" />
+  <img src="https://img.shields.io/badge/updates-daily-FFB347?style=flat-square&labelColor=0E1013" alt="Updates daily" />
 </p>
 
 </div>
