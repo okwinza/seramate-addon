@@ -31,10 +31,12 @@ local function resolveHoveredCharacter()
 	if BNET_CLIENT_WOW and game.clientProgram ~= BNET_CLIENT_WOW then
 		return nil
 	end
-	if not game.characterName or not game.realmName then
+	local name = ns.Util.plainString(game.characterName)
+	local realm = ns.Util.plainString(game.realmName)
+	if not name or not realm then
 		return nil
 	end
-	return game.characterName, game.realmName
+	return name, realm
 end
 
 local function onFriendsTooltipShow()

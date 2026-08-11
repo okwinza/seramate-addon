@@ -10,8 +10,9 @@ local function onUnitTooltip(tooltip, data)
 	-- World-cursor tooltips (12.x) fill unit/guid with secret values; scrub them or the
 	-- UnitIsPlayer/GetPlayerInfoByGUID calls below hard-error.
 	local _, unit = tooltip:GetUnit()
-	unit = ns.Util.scrubSecret(unit)
-	local guid = ns.Util.scrubSecret(data and data.guid) or (unit and UnitGUID(unit))
+	unit = ns.Util.plainString(unit)
+	local guid = ns.Util.plainString(data and data.guid)
+		or ns.Util.plainString(unit and UnitGUID(unit))
 
 	local name, realm
 	if unit and UnitIsPlayer(unit) then
@@ -21,7 +22,9 @@ local function onUnitTooltip(tooltip, data)
 		name, realm = resolvedName, resolvedRealm
 	end
 
-	if not name or name == "" then
+	-- Both resolvers return secrets in restricted contexts. (Keys.lookup scrubs realm itself.)
+	name = ns.Util.plainString(name)
+	if not name then
 		return
 	end
 	if not ns.Guard.claim(tooltip, guid or name) then

@@ -100,13 +100,14 @@ local function resolveTarget(contextData)
 	-- token, not the WoW character), so read the character straight from the game account info.
 	local game = contextData.accountInfo and contextData.accountInfo.gameAccountInfo
 	if game and (not BNET_CLIENT_WOW or game.clientProgram == BNET_CLIENT_WOW) then
-		return finalize(game.characterName, game.realmName)
+		return finalize(ns.Util.plainString(game.characterName), ns.Util.plainString(game.realmName))
 	end
 
-	-- Unit / player menus: the character is in name+server, or on the unit token.
-	local name = contextData.name ~= "" and contextData.name or nil
-	local realm = contextData.server ~= "" and contextData.server or nil
-	local unit = ns.Util.scrubSecret(contextData.unit)
+	-- Unit / player menus: the character is in name+server, or on the unit token. Our own
+	-- callback taints the menu build, so every field here can arrive secret (see plainString).
+	local name = ns.Util.plainString(contextData.name)
+	local realm = ns.Util.plainString(contextData.server)
+	local unit = ns.Util.plainString(contextData.unit)
 	if not name and unit and UnitIsPlayer(unit) then
 		name, realm = UnitName(unit)
 	end

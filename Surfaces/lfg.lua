@@ -1,12 +1,15 @@
 local _, ns = ...
 
-local function showFor(fullName, token)
-	if not fullName or fullName == "" then
+-- The guard token is built here, from the scrubbed name: a secret concatenates fine but the
+-- token is later compared, which tainted code may not do to a secret-derived value.
+local function showFor(fullName, tokenPrefix)
+	fullName = ns.Util.plainString(fullName)
+	if not fullName then
 		return
 	end
 	local name, realm = ns.Keys.splitFullName(fullName)
 	local record = ns.Keys.lookup(name, realm)
-	if record and ns.Guard.claim(GameTooltip, token) then
+	if record and ns.Guard.claim(GameTooltip, tokenPrefix .. fullName) then
 		ns.Render.renderInto(GameTooltip, record, "lfg")
 	end
 end
@@ -19,9 +22,7 @@ local function installHooks()
 				return
 			end
 			local info = C_LFGList.GetSearchResultInfo(resultID)
-			if info and info.leaderName then
-				showFor(info.leaderName, "lfg:" .. info.leaderName)
-			end
+			showFor(info and info.leaderName, "lfg:")
 		end)
 	end
 
@@ -33,10 +34,7 @@ local function installHooks()
 			if not applicantID or not memberIdx then
 				return
 			end
-			local fullName = C_LFGList.GetApplicantMemberInfo(applicantID, memberIdx)
-			if fullName then
-				showFor(fullName, "lfgapp:" .. fullName)
-			end
+			showFor(C_LFGList.GetApplicantMemberInfo(applicantID, memberIdx), "lfgapp:")
 		end)
 	end
 end

@@ -442,13 +442,35 @@ eq("resolve instance setting ignored outside", ns.Render.resolveMode(false, "ful
 eq("resolve combat hide beats instance compact", ns.Render.resolveMode(true, "full", "hide", true, "compact"), "hide")
 eq("resolve instance hide beats combat compact", ns.Render.resolveMode(true, "full", "compact", true, "hide"), "hide")
 
--- ---- Util.scrubSecret (WoW 12.x secret values) ---------------------------------
-eq("scrubSecret passthrough without API", ns.Util.scrubSecret("player"), "player")
-eq("scrubSecret keeps nil", ns.Util.scrubSecret(nil), nil)
-issecretvalue = function(value) return value == "SECRET" end -- luacheck: ignore 121
-eq("scrubSecret drops secret", ns.Util.scrubSecret("SECRET"), nil)
-eq("scrubSecret keeps plain value", ns.Util.scrubSecret("Player-1234-DEADBEEF"), "Player-1234-DEADBEEF")
-issecretvalue = nil -- luacheck: ignore 121
+-- ---- Secret values (WoW 12.x) --------------------------------------------------
+-- Plain Lua has no secrets, so sentinel strings stand in and issecretvalue is stubbed to
+-- recognize them. The client owns that global, so install it only around the cases below.
+local SECRET_NAME, SECRET_SERVER = "\1secret-name", "\1secret-server"
+local function useSecrets(active)
+	issecretvalue = active and function(value)
+		return value == SECRET_NAME or value == SECRET_SERVER
+	end or nil
+end
+
+eq("plainString passthrough without the API", ns.Util.plainString("player"), "player")
+useSecrets(true)
+eq("plainString drops secret", ns.Util.plainString(SECRET_NAME), nil)
+eq("plainString drops empty", ns.Util.plainString(""), nil)
+eq("plainString drops nil", ns.Util.plainString(nil), nil)
+eq("plainString drops non-string", ns.Util.plainString(42), nil)
+eq("plainString keeps plain value", ns.Util.plainString("Fooplayer"), "Fooplayer")
+
+-- cleanName must not string-op a secret (`:gsub` is banned indexed access)
+eq("cleanName drops secret", ns.Util.cleanName(SECRET_NAME), "")
+
+-- the funnel every surface reaches: one that forgets to scrub still can't crash it. The DB is
+-- seeded with the key a secret name WOULD build, so an unguarded lookup returns that record.
+local savedDb = ns.DB
+ns.DB = { HORDE = { [SECRET_NAME .. "-Tarren Mill"] = { c = "v2=1500" } }, ALLIANCE = {} }
+eq("lookup drops secret name", ns.Keys.lookup(SECRET_NAME, "Tarren Mill"), nil)
+eq("splitFullName drops secret", ns.Keys.splitFullName(SECRET_NAME), nil)
+ns.DB = savedDb
+useSecrets(false)
 
 -- ---- Util.isCopyShortcut (Ctrl+C detection for the copy popup) ------------------
 eq("copy shortcut C+ctrl", ns.Util.isCopyShortcut("C", true), true)
@@ -571,6 +593,95 @@ _G.GameTooltip = tip
 enter(fakeEntry("Guildie", _G.Enum.ClubType.Guild))
 check("guild surface off leaves no bare tooltip", tip:IsShown() == false)
 ns.Settings.set("guild", "surfaces", true)
+
+-- ---- Menu surface (Surfaces/menu.lua against a stubbed Menu API) ---------------
+-- Regression cover for the 12x prod error "attempt to compare field 'name' (a secret string
+-- value, while execution tainted by 'Seramate')". The assertions are on the outcome — fall
+-- back to the unit, never link the sentinel — which is what the old `contextData.name ~= ""`
+-- got wrong.
+local lastFrame
+local function fakeFrame()
+	local frame = { scripts = {} }
+	function frame:SetScript(event, handler) self.scripts[event] = handler end
+	-- every other frame method is a no-op returning the frame
+	return setmetatable(frame, { __index = function() return function() return frame end end })
+end
+_G.CreateFrame = function() lastFrame = fakeFrame() return lastFrame end
+_G.UISpecialFrames = {}
+_G.tinsert = table.insert
+_G.BNET_CLIENT_WOW = "WoW"
+_G.UnitIsPlayer = function(unit) return unit == "target" end
+_G.UnitName = function(unit) if unit == "target" then return "Fooplayer", nil end end
+
+local menuHandlers = {}
+_G.Menu = { ModifyMenu = function(tag, callback) menuHandlers[tag] = callback end }
+
+load("Surfaces/menu.lua")
+local menuFrame = lastFrame
+menuFrame.scripts.OnEvent() -- PLAYER_LOGIN
+
+check("menu registers the unit menu tags", menuHandlers.MENU_UNIT_PLAYER ~= nil
+	and menuHandlers.MENU_UNIT_PARTY ~= nil
+	and menuHandlers.MENU_UNIT_RAID_PLAYER ~= nil
+	and menuHandlers.MENU_UNIT_FRIEND ~= nil
+	and menuHandlers.MENU_UNIT_BN_FRIEND ~= nil)
+
+local capturedUrl
+local realProfileUrl = ns.Util.profileUrl
+ns.Util.profileUrl = function(...) capturedUrl = realProfileUrl(...) return capturedUrl end
+
+local function openMenu(tag, contextData)
+	local root = { buttons = {}, queued = 0 }
+	function root:QueueDivider() self.queued = self.queued + 1 end
+	function root:QueueTitle() self.queued = self.queued + 1 end
+	function root:CreateButton(text, click) self.buttons[#self.buttons + 1] = { text = text, click = click } end
+	function root:ClearQueuedDescriptions() end
+	capturedUrl = nil
+	menuHandlers[tag](nil, root, contextData)
+	if root.buttons[1] then
+		root.buttons[1].click()
+	end
+	return root
+end
+
+useSecrets(true)
+
+-- the reported crash: right-click a targeted player, name+server both secret
+local menu = openMenu("MENU_UNIT_PLAYER",
+	{ unit = "target", name = SECRET_NAME, server = SECRET_SERVER })
+check("menu secret name still offers the profile link", #menu.buttons == 1)
+eq("menu secret name resolves through the unit", capturedUrl,
+	"https://seramate.com/eu/Tarren%20Mill/Fooplayer")
+
+-- plain fields are still trusted as-is (no needless unit round-trip)
+openMenu("MENU_UNIT_PLAYER", { unit = "target", name = "Barplayer", server = "Ravencrest" })
+eq("menu plain name used directly", capturedUrl, "https://seramate.com/eu/Ravencrest/Barplayer")
+
+-- empty strings mean "same realm / read the unit", as before
+openMenu("MENU_UNIT_PLAYER", { unit = "target", name = "", server = "" })
+eq("menu empty name falls back to the unit", capturedUrl,
+	"https://seramate.com/eu/Tarren%20Mill/Fooplayer")
+
+-- nothing readable left: degrade to no button rather than linking the secret
+menu = openMenu("MENU_UNIT_PLAYER", { name = SECRET_NAME, server = SECRET_SERVER })
+check("menu secret name without a unit adds nothing", #menu.buttons == 0 and menu.queued == 0)
+
+-- battle.net menu: the character comes from gameAccountInfo, secret or not
+local function bnetContext(characterName, realmName)
+	return {
+		name = "|Kj35|k",
+		accountInfo = { gameAccountInfo = {
+			clientProgram = "WoW", characterName = characterName, realmName = realmName,
+		} },
+	}
+end
+openMenu("MENU_UNIT_BN_FRIEND", bnetContext("Bnetguy", "Ravencrest"))
+eq("menu bnet friend links the character", capturedUrl, "https://seramate.com/eu/Ravencrest/Bnetguy")
+menu = openMenu("MENU_UNIT_BN_FRIEND", bnetContext(SECRET_NAME, SECRET_SERVER))
+check("menu bnet secret character adds nothing", #menu.buttons == 0)
+
+useSecrets(false)
+ns.Util.profileUrl = realProfileUrl
 
 -- ---- summary -----------------------------------------------------------------
 print(string.format("\n%d passed, %d failed", passed, failed))

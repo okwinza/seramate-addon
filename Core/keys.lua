@@ -24,6 +24,10 @@ end
 -- themselves contain hyphens ("Azjol-Nerub"), so only the first split matters; character
 -- names never contain one.
 function Keys.splitFullName(full)
+	full = ns.Util.plainString(full)
+	if not full then
+		return nil
+	end
 	local name, realm = full:match("^(.-)%-(.+)$")
 	if name then
 		return name, realm
@@ -108,14 +112,18 @@ end
 -- map-resolved display name; probes Horde then Alliance since the caller rarely knows the
 -- unit's faction.
 function Keys.lookup(name, realmToken)
-	if not name or name == "" then
+	-- Every surface funnels through here, so the secret scrub lives here too: one that forgets
+	-- it on the way in still can't reach a comparison with a secret (see Util.plainString).
+	name = ns.Util.plainString(name)
+	if not name then
 		return nil
 	end
 
-	if not realmToken or realmToken == "" then
-		realmToken = (type(GetRealmName) == "function") and GetRealmName() or nil
+	realmToken = ns.Util.plainString(realmToken)
+	if not realmToken and type(GetRealmName) == "function" then
+		realmToken = ns.Util.plainString(GetRealmName())
 	end
-	if not realmToken or realmToken == "" then
+	if not realmToken then
 		return nil
 	end
 

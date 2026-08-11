@@ -1,5 +1,9 @@
 # Changelog
 
+- Fix: Lua error `attempt to compare field 'name' (a secret string value…)` when right-clicking
+  a player to open the unit menu. The 12.x client hides the name behind a secret value there, so
+  the addon now reads the character off the unit — "Copy Profile Link" works again. The tooltip,
+  Group Finder, guild and Battle.net surfaces are hardened against the same thing.
 - Guild & Communities: hovering a roster member shows their ratings — including the
   expanded Roster view, where the stock UI shows no tooltip at all. Own toggle under
   Surfaces.

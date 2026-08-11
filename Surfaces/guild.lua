@@ -20,8 +20,8 @@ end
 
 local function onMemberEnter(entry)
 	local memberInfo = entry.GetMemberInfo and entry:GetMemberInfo()
-	local fullName = memberInfo and memberInfo.name
-	if not fullName or fullName == "" or not isCharacterClub(entry) then
+	local fullName = ns.Util.plainString(memberInfo and memberInfo.name)
+	if not fullName or not isCharacterClub(entry) then
 		return
 	end
 

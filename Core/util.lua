@@ -122,11 +122,17 @@ function Util.label(text)
 	return Util.colorize(text, LABEL)
 end
 
--- WoW 12.x hands addons "secret" values in some paths (world-cursor tooltips: unit token,
--- data.guid) that protected APIs like UnitIsPlayer reject from addon code with a Lua error.
--- Secrets carry no addon-readable information, so treat them as absent.
-function Util.scrubSecret(value)
+-- The one way to read a string the client handed us. WoW 12.x marks some values "secret"
+-- (world-cursor tooltips, unit menus, restricted-context UnitName): reading one is fine, but
+-- once our own code taints the execution, comparing or boolean-testing it is a Lua error and
+-- `:gsub` on it is a banned indexed access. A secret carries nothing we could read, and an
+-- empty string already means "absent", so both collapse to nil. The secret test has to come
+-- before every comparison below, including `== ""`.
+function Util.plainString(value)
 	if value ~= nil and type(issecretvalue) == "function" and issecretvalue(value) then
+		return nil
+	end
+	if type(value) ~= "string" or value == "" then
 		return nil
 	end
 	return value
@@ -177,7 +183,8 @@ end
 -- escapes into a profile URL; a name that reduces to empty (an obfuscated token) is not a
 -- real character we can link to.
 function Util.cleanName(text)
-	if type(text) ~= "string" then
+	text = Util.plainString(text)
+	if not text then
 		return ""
 	end
 	text = text:gsub("|H.-|h(.-)|h", "%1")
