@@ -91,20 +91,12 @@ local function finalize(name, realm)
 	return name, ns.Keys.resolveRealm(realm)
 end
 
-local function resolveTarget(contextData)
+-- Unit-style menus: the character is in name+server, or on the unit token. Our own callback
+-- taints the menu build, so every field here can arrive secret (see plainString).
+local function resolveUnit(_, contextData)
 	if not contextData then
 		return nil
 	end
-
-	-- Battle.net friend menu: contextData.name is the BNet account tag (a |K…|k substitution
-	-- token, not the WoW character), so read the character straight from the game account info.
-	local game = contextData.accountInfo and contextData.accountInfo.gameAccountInfo
-	if game and (not BNET_CLIENT_WOW or game.clientProgram == BNET_CLIENT_WOW) then
-		return finalize(ns.Util.plainString(game.characterName), ns.Util.plainString(game.realmName))
-	end
-
-	-- Unit / player menus: the character is in name+server, or on the unit token. Our own
-	-- callback taints the menu build, so every field here can arrive secret (see plainString).
 	local name = ns.Util.plainString(contextData.name)
 	local realm = ns.Util.plainString(contextData.server)
 	local unit = ns.Util.plainString(contextData.unit)
@@ -114,8 +106,48 @@ local function resolveTarget(contextData)
 	return finalize(name, realm)
 end
 
-local function addProfileButton(_, rootDescription, contextData)
-	local name, realm = resolveTarget(contextData)
+-- Battle.net-account menus: contextData.name is the account label (|K…|k token, battletag,
+-- or real name), never a character — read the linked game account instead. Other menus must
+-- NOT: the client fills accountInfo (via GUID) even on e.g. guild members who are also
+-- friends, and there it names whatever character the friend is playing, not the clicked row.
+local function resolveBnetAccount(_, contextData)
+	local game = contextData and contextData.accountInfo and contextData.accountInfo.gameAccountInfo
+	if game and (not BNET_CLIENT_WOW or game.clientProgram == BNET_CLIENT_WOW) then
+		return finalize(ns.Util.plainString(game.characterName), ns.Util.plainString(game.realmName))
+	end
+	return nil
+end
+
+local function finalizeFullName(full)
+	return finalize(ns.Keys.splitFullName(full))
+end
+
+-- Not unit popups: the client tags the Group Finder menus with no contextData, so the
+-- character comes off the owning row (ns.LFG). leaderName is nil until you've signed up.
+local function resolveSearchEntry(owner)
+	return finalizeFullName(ns.LFG.leaderFullName(owner))
+end
+
+local function resolveApplicant(owner)
+	return finalizeFullName(ns.LFG.applicantFullName(owner))
+end
+
+local MENU_RESOLVERS = {
+	MENU_UNIT_PLAYER = resolveUnit,
+	MENU_UNIT_PARTY = resolveUnit,
+	MENU_UNIT_RAID_PLAYER = resolveUnit,
+	MENU_UNIT_ENEMY_PLAYER = resolveUnit,
+	MENU_UNIT_FRIEND = resolveUnit,
+	MENU_UNIT_FRIEND_OFFLINE = resolveUnit,
+	MENU_UNIT_BN_FRIEND = resolveBnetAccount,
+	MENU_UNIT_COMMUNITIES_GUILD_MEMBER = resolveUnit,
+	MENU_UNIT_COMMUNITIES_WOW_MEMBER = resolveUnit,
+	MENU_UNIT_COMMUNITIES_MEMBER = resolveBnetAccount,
+	MENU_LFG_FRAME_SEARCH_ENTRY = resolveSearchEntry,
+	MENU_LFG_FRAME_MEMBER_APPLY = resolveApplicant,
+}
+
+local function addProfileButton(rootDescription, name, realm)
 	if not name then
 		return
 	end
@@ -135,22 +167,15 @@ local function registerMenus()
 		ns.Util.debug("menu: Menu.ModifyMenu unavailable")
 		return
 	end
-	local tags = {
-		"MENU_UNIT_PLAYER",
-		"MENU_UNIT_PARTY",
-		"MENU_UNIT_RAID_PLAYER",
-		"MENU_UNIT_FRIEND",
-		"MENU_UNIT_BN_FRIEND",
-	}
-	for _, tag in ipairs(tags) do
+	for tag, resolve in pairs(MENU_RESOLVERS) do
 		-- Each registration needs its OWN closure: the menu system keys registrations by the
 		-- callback ("owner"), so reusing one function lets later tags replace earlier ones,
 		-- leaving only the last tag hooked (cf. TotalRP3 UnitPopups OnModuleEnable).
 		Menu.ModifyMenu(tag, function(owner, rootDescription, contextData)
-			addProfileButton(owner, rootDescription, contextData)
+			addProfileButton(rootDescription, resolve(owner, contextData))
 		end)
 	end
-	ns.Util.debug("menu: registered", #tags, "unit menu hooks")
+	ns.Util.debug("menu: menu hooks registered")
 end
 
 -- Register post-login, not at addon load: the Menu system isn't reliably hookable that early

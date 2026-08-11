@@ -1,5 +1,8 @@
 # Changelog
 
+- "Copy Profile Link" in more right-click menus: enemy players, guild & community rosters,
+  offline friends, and the Group Finder — both group leaders in the browser and applicants
+  to your listing.
 - Fix: Lua error `attempt to compare field 'name' (a secret string value…)` when right-clicking
   a player to open the unit menu. The 12.x client hides the name behind a secret value there, so
   the addon now reads the character off the unit — "Copy Profile Link" works again. The tooltip,

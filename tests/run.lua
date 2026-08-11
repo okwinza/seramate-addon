@@ -616,28 +616,38 @@ _G.UnitName = function(unit) if unit == "target" then return "Fooplayer", nil en
 local menuHandlers = {}
 _G.Menu = { ModifyMenu = function(tag, callback) menuHandlers[tag] = callback end }
 
+load("Surfaces/lfg.lua") -- the menu's Group Finder resolvers go through ns.LFG from here
 load("Surfaces/menu.lua")
 local menuFrame = lastFrame
 menuFrame.scripts.OnEvent() -- PLAYER_LOGIN
 
-check("menu registers the unit menu tags", menuHandlers.MENU_UNIT_PLAYER ~= nil
-	and menuHandlers.MENU_UNIT_PARTY ~= nil
-	and menuHandlers.MENU_UNIT_RAID_PLAYER ~= nil
-	and menuHandlers.MENU_UNIT_FRIEND ~= nil
-	and menuHandlers.MENU_UNIT_BN_FRIEND ~= nil)
+local pinnedMenuTags = {
+	"MENU_UNIT_PLAYER", "MENU_UNIT_PARTY", "MENU_UNIT_RAID_PLAYER", "MENU_UNIT_ENEMY_PLAYER",
+	"MENU_UNIT_FRIEND", "MENU_UNIT_FRIEND_OFFLINE", "MENU_UNIT_BN_FRIEND",
+	"MENU_UNIT_COMMUNITIES_GUILD_MEMBER", "MENU_UNIT_COMMUNITIES_WOW_MEMBER",
+	"MENU_UNIT_COMMUNITIES_MEMBER", "MENU_LFG_FRAME_SEARCH_ENTRY", "MENU_LFG_FRAME_MEMBER_APPLY",
+}
+for _, tag in ipairs(pinnedMenuTags) do
+	check("menu registers " .. tag, menuHandlers[tag] ~= nil)
+end
+local registeredMenuTagCount = 0
+for _ in pairs(menuHandlers) do
+	registeredMenuTagCount = registeredMenuTagCount + 1
+end
+check("menu registers nothing beyond the pinned tags", registeredMenuTagCount == #pinnedMenuTags)
 
 local capturedUrl
 local realProfileUrl = ns.Util.profileUrl
 ns.Util.profileUrl = function(...) capturedUrl = realProfileUrl(...) return capturedUrl end
 
-local function openMenu(tag, contextData)
+local function openMenu(tag, contextData, owner)
 	local root = { buttons = {}, queued = 0 }
 	function root:QueueDivider() self.queued = self.queued + 1 end
 	function root:QueueTitle() self.queued = self.queued + 1 end
 	function root:CreateButton(text, click) self.buttons[#self.buttons + 1] = { text = text, click = click } end
 	function root:ClearQueuedDescriptions() end
 	capturedUrl = nil
-	menuHandlers[tag](nil, root, contextData)
+	menuHandlers[tag](owner, root, contextData)
 	if root.buttons[1] then
 		root.buttons[1].click()
 	end
@@ -666,19 +676,108 @@ eq("menu empty name falls back to the unit", capturedUrl,
 menu = openMenu("MENU_UNIT_PLAYER", { name = SECRET_NAME, server = SECRET_SERVER })
 check("menu secret name without a unit adds nothing", #menu.buttons == 0 and menu.queued == 0)
 
+-- enemy players ride the same resolution as friendly ones
+openMenu("MENU_UNIT_ENEMY_PLAYER",
+	{ which = "ENEMY_PLAYER", unit = "target", name = SECRET_NAME, server = SECRET_SERVER })
+eq("menu enemy player resolves through the unit", capturedUrl,
+	"https://seramate.com/eu/Tarren%20Mill/Fooplayer")
+
 -- battle.net menu: the character comes from gameAccountInfo, secret or not
-local function bnetContext(characterName, realmName)
+local function bnetContext(which, characterName, realmName)
 	return {
+		which = which,
 		name = "|Kj35|k",
 		accountInfo = { gameAccountInfo = {
 			clientProgram = "WoW", characterName = characterName, realmName = realmName,
 		} },
 	}
 end
-openMenu("MENU_UNIT_BN_FRIEND", bnetContext("Bnetguy", "Ravencrest"))
+openMenu("MENU_UNIT_BN_FRIEND", bnetContext("BN_FRIEND", "Bnetguy", "Ravencrest"))
 eq("menu bnet friend links the character", capturedUrl, "https://seramate.com/eu/Ravencrest/Bnetguy")
-menu = openMenu("MENU_UNIT_BN_FRIEND", bnetContext(SECRET_NAME, SECRET_SERVER))
+menu = openMenu("MENU_UNIT_BN_FRIEND", bnetContext("BN_FRIEND", SECRET_NAME, SECRET_SERVER))
 check("menu bnet secret character adds nothing", #menu.buttons == 0)
+
+-- a visible battletag (name obfuscation off) must never become a profile URL
+menu = openMenu("MENU_UNIT_BN_FRIEND", { which = "BN_FRIEND", name = "Friend#1234" })
+check("menu battletag never becomes a url", #menu.buttons == 0 and menu.queued == 0)
+
+-- battle.net community rows are accounts too: link the character being played
+openMenu("MENU_UNIT_COMMUNITIES_MEMBER", bnetContext("COMMUNITIES_MEMBER", "Bnetguy", "Ravencrest"))
+eq("menu bnet community links the character", capturedUrl, "https://seramate.com/eu/Ravencrest/Bnetguy")
+
+-- guild rows link the CLICKED character, not the bnet friend's currently played one
+-- (see resolveBnetAccount in menu.lua)
+openMenu("MENU_UNIT_COMMUNITIES_GUILD_MEMBER", {
+	which = "COMMUNITIES_GUILD_MEMBER", name = "Altchar", server = "Ravencrest",
+	accountInfo = { gameAccountInfo = {
+		clientProgram = "WoW", characterName = "Mainchar", realmName = "Tarren Mill",
+	} },
+})
+eq("menu guild member links the clicked row", capturedUrl, "https://seramate.com/eu/Ravencrest/Altchar")
+
+-- character-club community rows resolve like guild rows
+openMenu("MENU_UNIT_COMMUNITIES_WOW_MEMBER",
+	{ which = "COMMUNITIES_WOW_MEMBER", name = "Clubchar", server = "Ravencrest" })
+eq("menu community character links directly", capturedUrl, "https://seramate.com/eu/Ravencrest/Clubchar")
+
+-- offline friends still carry name+server; there is no unit to fall back to
+openMenu("MENU_UNIT_FRIEND_OFFLINE",
+	{ which = "FRIEND_OFFLINE", name = "Offguy", server = "Ravencrest" })
+eq("menu offline friend links directly", capturedUrl, "https://seramate.com/eu/Ravencrest/Offguy")
+
+-- a bnet friend playing another blizzard game has no linkable character
+menu = openMenu("MENU_UNIT_BN_FRIEND", {
+	which = "BN_FRIEND", name = "|Kj35|k",
+	accountInfo = { gameAccountInfo = { clientProgram = "S2", characterName = "SC2Hero" } },
+})
+check("menu bnet friend in another game adds nothing", #menu.buttons == 0 and menu.queued == 0)
+
+-- group finder menus carry no contextData; the character hangs off the owning row
+local lfgLeaderName = "Leader-Ravencrest"
+_G.C_LFGList = {
+	GetSearchResultInfo = function(resultID)
+		if resultID == 7 then
+			return { leaderName = lfgLeaderName }
+		end
+	end,
+	GetApplicantMemberInfo = function(applicantID, memberIdx)
+		if applicantID == 4 and memberIdx == 2 then
+			return "Applicant-Tarren Mill"
+		end
+	end,
+}
+openMenu("MENU_LFG_FRAME_SEARCH_ENTRY", nil, { resultID = 7 })
+eq("menu lfg leader links from the row", capturedUrl, "https://seramate.com/eu/Ravencrest/Leader")
+
+lfgLeaderName = SECRET_NAME
+menu = openMenu("MENU_LFG_FRAME_SEARCH_ENTRY", nil, { resultID = 7 })
+check("menu lfg secret leader adds nothing", #menu.buttons == 0 and menu.queued == 0)
+
+lfgLeaderName = nil -- not signed up: the client omits the leader name entirely
+menu = openMenu("MENU_LFG_FRAME_SEARCH_ENTRY", nil, { resultID = 7 })
+check("menu lfg unlisted leader adds nothing", #menu.buttons == 0 and menu.queued == 0)
+
+-- rows without their lookup keys (placeholder frames) must stay silent, not error
+menu = openMenu("MENU_LFG_FRAME_SEARCH_ENTRY", nil, {})
+check("menu lfg row without resultID adds nothing", #menu.buttons == 0 and menu.queued == 0)
+menu = openMenu("MENU_LFG_FRAME_SEARCH_ENTRY", nil, nil)
+check("menu lfg without an owner adds nothing", #menu.buttons == 0 and menu.queued == 0)
+
+local applicantRow = { applicantID = 4 }
+local function applicantOwner(memberIdx)
+	return { memberIdx = memberIdx, GetParent = function() return applicantRow end }
+end
+openMenu("MENU_LFG_FRAME_MEMBER_APPLY", nil, applicantOwner(2))
+eq("menu lfg applicant links from the row", capturedUrl,
+	"https://seramate.com/eu/Tarren%20Mill/Applicant")
+
+menu = openMenu("MENU_LFG_FRAME_MEMBER_APPLY", nil, applicantOwner(nil))
+check("menu lfg applicant without memberIdx adds nothing", #menu.buttons == 0 and menu.queued == 0)
+
+-- the applicant name can arrive secret like every other client string
+_G.C_LFGList.GetApplicantMemberInfo = function() return SECRET_NAME end
+menu = openMenu("MENU_LFG_FRAME_MEMBER_APPLY", nil, applicantOwner(2))
+check("menu lfg secret applicant adds nothing", #menu.buttons == 0 and menu.queued == 0)
 
 useSecrets(false)
 ns.Util.profileUrl = realProfileUrl

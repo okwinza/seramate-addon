@@ -1,5 +1,29 @@
 local _, ns = ...
 
+-- The Group Finder row layout — which Blizzard frame carries which id — is encoded here once,
+-- for the tooltip hooks below and for menu.lua. Names return raw; every consumer ends in a
+-- scrub (see Util.plainString).
+ns.LFG = {}
+
+function ns.LFG.leaderFullName(row)
+	local resultID = row and row.resultID
+	if not resultID then
+		return nil
+	end
+	local info = C_LFGList.GetSearchResultInfo(resultID)
+	return info and info.leaderName
+end
+
+function ns.LFG.applicantFullName(button)
+	local parent = button and button:GetParent()
+	local applicantID = parent and parent.applicantID
+	local memberIdx = button and button.memberIdx
+	if not applicantID or not memberIdx then
+		return nil
+	end
+	return C_LFGList.GetApplicantMemberInfo(applicantID, memberIdx)
+end
+
 -- The guard token is built here, from the scrubbed name: a secret concatenates fine but the
 -- token is later compared, which tainted code may not do to a secret-derived value.
 local function showFor(fullName, tokenPrefix)
@@ -17,24 +41,13 @@ end
 local function installHooks()
 	if type(LFGListSearchEntry_OnEnter) == "function" then
 		hooksecurefunc("LFGListSearchEntry_OnEnter", function(self)
-			local resultID = self and self.resultID
-			if not resultID then
-				return
-			end
-			local info = C_LFGList.GetSearchResultInfo(resultID)
-			showFor(info and info.leaderName, "lfg:")
+			showFor(ns.LFG.leaderFullName(self), "lfg:")
 		end)
 	end
 
 	if type(LFGListApplicantMember_OnEnter) == "function" then
 		hooksecurefunc("LFGListApplicantMember_OnEnter", function(self)
-			local parent = self and self:GetParent()
-			local applicantID = parent and parent.applicantID
-			local memberIdx = self and self.memberIdx
-			if not applicantID or not memberIdx then
-				return
-			end
-			showFor(C_LFGList.GetApplicantMemberInfo(applicantID, memberIdx), "lfgapp:")
+			showFor(ns.LFG.applicantFullName(self), "lfgapp:")
 		end)
 	end
 end
