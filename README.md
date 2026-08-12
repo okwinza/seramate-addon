@@ -12,6 +12,7 @@
   <img src="https://img.shields.io/badge/brackets-2v2%20%7C%203v3%20%7C%20RBG%20%7C%20Shuffle%20%7C%20Blitz-FFB347?style=flat-square&labelColor=0E1013" alt="Brackets 2v2 3v3 RBG Shuffle Blitz" />
   <img src="https://img.shields.io/badge/data-seramate.com-FFB347?style=flat-square&labelColor=0E1013" alt="Data from seramate.com" />
   <img src="https://img.shields.io/badge/updates-daily-FFB347?style=flat-square&labelColor=0E1013" alt="Updates daily" />
+  <a href="https://www.curseforge.com/wow/addons/seramate-pvp-inspect"><img src="https://img.shields.io/curseforge/dt/1607724?style=flat-square&labelColor=0E1013&color=FFB347" alt="CurseForge downloads" /></a>
 </p>
 
 </div>
