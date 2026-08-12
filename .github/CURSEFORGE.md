@@ -72,6 +72,20 @@ Type **`/seramate`** (or the shorter **`/sera`** or **`/sm`**) to open settings.
 
 ![Seramate PvP Inspect settings panel](https://cdn.seramate.com/addon/assets/settings.png)
 
+Two sets of toggles, all on by default:
+
+- **Lines**: which rows appear. Current 2v2 / 3v3 / RBG / Shuffle / Blitz, this-expansion 2v2 / 3v3 / RBG / Shuffle / Blitz, Titles, and Last Updated.
+- **Surfaces**: which tooltips the addon hooks. Character tooltip, LFG / Premade Groups, Battle.net friends, and Guild & Communities.
+
+Plus display controls:
+
+- **Layout**: Full (default) or Compact. Compact folds each rating section to a single line and shows only your best title; hold **Shift** while opening and viewing the tooltip to show all titles.
+- **In Combat**: what happens while you're fighting — same as usual (default), force the compact summary, or hide the Seramate block entirely.
+- **In Instances**: the same choices for arenas, battlegrounds, dungeons and raids.
+- **Title Colors** (its own settings page): pick your own color for each title tier, with a per-tier reset back to the defaults.
+
+`/seramate dbg` (or `/seramate debug`) toggles debug messages on and off.
+
 ## Coverage and data
 
 - **EU and US** characters who reached at least **1500** rating in any bracket this season (**1800** for Solo Shuffle and Battleground Blitz).
