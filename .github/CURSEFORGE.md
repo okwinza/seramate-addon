@@ -8,7 +8,7 @@ _See any player's PvP ratings and notable titles, right on their in-game tooltip
 
 ## What it does
 
-Hover any player and Seramate PvP Inspect adds their arena and battleground standing to the tooltip. The data comes from Seramate's own PvP ladder database and is bundled into the addon, so lookups are instant and work fully offline while you play.
+Hover any player and Seramate PvP Inspect adds their arena and battleground standing to the tooltip. The data comes from Seramate's own PvP ladder database and is bundled into the addon, so lookups are instant and work fully offline.
 
 | &nbsp; | &nbsp; |
 | --- | --- |
@@ -41,15 +41,21 @@ Members in the guild panel and WoW communities, on the roster hover tooltip — 
 
 ## Copy Seramate Profile
 
-Want to look someone up on seramate.com? Right-click them and hit **Copy Profile Link** — their profile URL is ready to paste.
+Right-click a player and hit **Copy Profile Link**. The popup opens with their seramate.com URL already selected, and closes itself once you press Ctrl+C.
+
+The entry is in every right-click menu a character has:
+
+- players in the world, and party or raid frames
+- enemy players
+- your friends list — online, offline, and Battle.net friends
+- guild and community rosters
+- the Group Finder — both the listings you browse and the applicants to your own group
 
 ![Copy dialog with a preselected seramate.com profile URL](https://cdn.seramate.com/addon/assets/surfaces/copy-profile.png)
 
 ## Install (CurseForge)
 
-Just press [**Download**] button. That's it.
-
-And keep an eye out for updates - the addon db **updates daily**.
+Press the [**Download**] button — that's it. Leave auto-update on in the CurseForge app, so the bundled ratings stay current.
 
 ## Install (Manual)
 

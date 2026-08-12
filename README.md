@@ -20,7 +20,7 @@
 
 ## What it does
 
-Hover any player and Seramate PvP Inspect adds their arena and battleground standing to the tooltip. The data comes from Seramate's own PvP ladder database and is bundled into the addon, so lookups are instant and work fully offline while you play.
+Hover any player and Seramate PvP Inspect adds their arena and battleground standing to the tooltip. The data comes from Seramate's own PvP ladder database and is bundled into the addon, so lookups are instant and work fully offline.
 
 <table>
 <tr><td><b>Current rating</b></td><td>2v2, 3v3, Rated Battlegrounds, Solo Shuffle, and Battleground Blitz</td></tr>
@@ -31,7 +31,7 @@ Hover any player and Seramate PvP Inspect adds their arena and battleground stan
 <tr><td><b>Profile copy-link</b></td><td>right-click a player to copy their seramate.com profile</td></tr>
 </table>
 
-Titles are colored by prestige tier, low to high:
+Title tiers, low to high:
 
 <div align="center">
   <img src=".github/assets/rank/combatant.png" width="40" alt="Combatant" />
@@ -46,21 +46,15 @@ Titles are colored by prestige tier, low to high:
 
 ## Where it shows
 
-Seramate PvP Inspect hooks every surface where other players appear. Each one is shown below.
+Seramate PvP Inspect hooks every surface where other players appear.
 
 ### Character tooltips
 
 Player unit frames, portraits, and nameplates — hover anyone to see their ratings and titles.
 
-<!-- screenshot: save as .github/assets/surfaces/tooltip.png, then uncomment -->
-<!-- <div align="center"><img src=".github/assets/surfaces/tooltip.png" width="420" alt="Ratings on a player unit tooltip" /></div> -->
-
 ### LFG / Premade Groups
 
 Group leaders in the Premade Groups results, and applicants to your own group.
-
-<!-- screenshot: save as .github/assets/surfaces/lfg.png, then uncomment -->
-<!-- <div align="center"><img src=".github/assets/surfaces/lfg.png" width="560" alt="Ratings in the Premade Groups list" /></div> -->
 
 ### Battle.net friends
 
@@ -73,13 +67,23 @@ the expanded Roster view, where the stock UI shows no tooltip at all.
 
 ## Copy Seramate Profile
 
-Want to look someone up on seramate.com? Right-click them and hit **Copy Profile Link** — their profile URL is ready to paste.
+Right-click a player and hit **Copy Profile Link**. The popup opens with their seramate.com URL already selected, and closes itself once you press Ctrl+C.
+
+The entry is in every right-click menu a character has:
+
+- players in the world, and party or raid frames
+- enemy players
+- your friends list — online, offline, and Battle.net friends
+- guild and community rosters
+- the Group Finder — both the listings you browse and the applicants to your own group
 
 <div align="center"><img src=".github/assets/surfaces/copy-profile.png" width="460" alt="Copy dialog with a preselected seramate.com profile URL" /></div>
 
 ## Install
 
-The download contains three folders. Drop all three into `World of Warcraft/_retail_/Interface/AddOns/`:
+Install it from [CurseForge](https://www.curseforge.com/wow/addons/seramate-pvp-inspect) and leave auto-update on, so the bundled ratings stay current.
+
+To install by hand instead: the download contains three folders. Drop all three into `World of Warcraft/_retail_/Interface/AddOns/`:
 
 - **Seramate**: the addon itself (UI and logic), always loaded.
 - **Seramate_DB_EU** and **Seramate_DB_US**: the bundled rating databases, one per region, loaded on demand so only your region is held in memory.
@@ -111,7 +115,6 @@ Plus display controls:
 ## Coverage and data
 
 - **EU and US** characters who reached at least **1500** rating in any bracket this season (**1800** for Solo Shuffle and Battleground Blitz).
-- Data is bundled into the addon, so lookups are local with no network calls.
 - Refreshed by new releases, published daily when the ladder changes.
 
 ## How it works
