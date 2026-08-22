@@ -1,5 +1,9 @@
 # Changelog
 
+- Compact layout: bracket names now have their own muted color, so "2v2 1840" reads as a name
+  and a rating rather than one run of text — Full is unchanged (the two sit in separate
+  columns there). Tune it as "Bracket name" in `tools/tooltip-colors.html`.
+
 - "Copy Profile Link" in more right-click menus: enemy players, guild & community rosters,
   offline friends, and the Group Finder — both group leaders in the browser and applicants
   to your listing.

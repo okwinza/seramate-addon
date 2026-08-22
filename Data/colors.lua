@@ -6,6 +6,9 @@ ns.Colors = {
 	header  = "ff8000",
 	section = "ffd100",
 	label   = "ffffff",
+	-- Compact folds a bracket name and its rating onto one line, so the name needs a color of
+	-- its own: in Full they sit in separate columns, but folded they'd both read as values.
+	bracket = "9d9d9d",
 	rating = { -- highest threshold first; first match wins
 		{ min = 2700, color = "ff8000" },
 		{ min = 2400, color = "0070dd" },

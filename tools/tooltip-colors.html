@@ -58,6 +58,7 @@
     font-size: 15px; line-height: 1.42;
     min-height: 120px;
   }
+  .tooltip.short { min-height: 0; }
   .tt-line { white-space: pre; }
   .tt-row { display: flex; justify-content: space-between; gap: 24px; }
   .tt-row .r { font-variant-numeric: tabular-nums; }
@@ -130,7 +131,9 @@
   <section class="preview-wrap">
     <p class="preview-label">Live preview</p>
     <div class="tooltip" id="preview"></div>
-    <p class="bg-note">The dimmed top lines are WoW's own tooltip (not editable); the blank below is Seramate's separator. Sample data spans every tier. The <code>Last Updated</code> value is uncolored in-game and has no slot.</p>
+    <p class="preview-label" style="margin-top:18px">Compact layout</p>
+    <div class="tooltip short" id="preview-compact"></div>
+    <p class="bg-note">The dimmed top lines are WoW's own tooltip (not editable); the blank below is Seramate's separator. Sample data spans every tier. The <code>Last Updated</code> value is uncolored in-game and has no slot. Compact folds each section onto one line, which is the only place a bracket name sits beside its own rating.</p>
   </section>
 
   <section id="controls"></section>
@@ -162,6 +165,7 @@ const DEFAULTS = {
   header:  "ff8000",
   section: "ffd100",
   label:   "ffffff",
+  bracket: "9d9d9d",
   rating: [
     { min: 2700, color: "ff8000", name: "≥ 2700" },
     { min: 2400, color: "0070dd", name: "≥ 2400" },
@@ -186,7 +190,8 @@ const DEFAULTS = {
 const STRUCTURE = [
   { key: "header",  name: "Header",        desc: '"Seramate PvP Info:" line' },
   { key: "section", name: "Section title", desc: '"Current Rating:", "Titles:", …' },
-  { key: "label",   name: "Label",         desc: "Bracket names, \"Last Updated:\"" },
+  { key: "label",   name: "Label",         desc: "Bracket names (Full), \"Last Updated:\"" },
+  { key: "bracket", name: "Bracket name",   desc: "\"2v2\", \"3v3\", … in the Compact layout" },
 ];
 
 // WoW's own tooltip lines that sit above Seramate's block in-game (not editable — shown so the
@@ -254,6 +259,27 @@ function renderPreview() {
   upd.innerHTML = `<span class="l">${span(state.label, "Last Updated:")}</span>` +
                   `<span class="r" style="color:#ffffff">${SAMPLE.updated}</span>`;
   p.appendChild(upd);
+
+  renderCompactPreview();
+}
+
+// Compact folds a section onto one line; SHORT mirrors Schema.SHORT in the addon.
+const COMPACT_SHORT = { "Current Rating": "Current", "This Expansion": "Exp" };
+
+function renderCompactPreview() {
+  const p = document.getElementById("preview-compact");
+  p.innerHTML = "";
+  p.appendChild(el("tt-line tt-header", span(state.header, "Seramate")));
+  for (const sec of SAMPLE.sections) {
+    const parts = sec.rows
+      .map(([bracket, rating]) => `${span(state.bracket, bracket)} ${span(pick(state.rating, rating), rating)}`)
+      .join("  ");
+    const row = el("tt-row");
+    row.innerHTML = `<span class="l">${span(state.section, COMPACT_SHORT[sec.title] + ":")}</span><span class="r">${parts}</span>`;
+    p.appendChild(row);
+  }
+  const [bestTitle, bestWeight] = SAMPLE.titles[0]; // compact shows only the best title
+  p.appendChild(el("tt-line", span(pick(state.title, bestWeight), bestTitle)));
 }
 
 // ---- controls --------------------------------------------------------------
@@ -307,7 +333,7 @@ function renderControls() {
 // ---- exports ---------------------------------------------------------------
 function mapObject() {
   return {
-    header: state.header, section: state.section, label: state.label,
+    header: state.header, section: state.section, label: state.label, bracket: state.bracket,
     rating: state.rating.map(t => ({ min: t.min, color: t.color })),
     title:  state.title.map(t => ({ min: t.min, key: t.key, label: t.label, color: t.color })),
   };
@@ -325,6 +351,7 @@ function toLua() {
     `\theader  = "${state.header}",`,
     `\tsection = "${state.section}",`,
     `\tlabel   = "${state.label}",`,
+    `\tbracket = "${state.bracket}",`,
     "\trating = { -- highest threshold first; first match wins",
     ...state.rating.map(tier),
     "\t},",
@@ -367,6 +394,8 @@ function loadMap(obj) {
   };
   state = {
     header: norm(obj.header), section: norm(obj.section), label: norm(obj.label),
+    // `bracket` postdates the first palettes; an older map loads with the default rather than failing
+    bracket: okColor(obj.bracket) ? norm(obj.bracket) : DEFAULTS.bracket,
     rating: tiers(obj.rating, DEFAULTS.rating),
     title:  tiers(obj.title, DEFAULTS.title),
   };

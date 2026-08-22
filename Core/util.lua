@@ -21,6 +21,7 @@ end
 local BRAND = esc(palette.header)
 local SECTION = esc(palette.section)
 local LABEL = esc(palette.label)
+local BRACKET = esc(palette.bracket)
 local TIERS = tierRamp(palette.rating)       -- rating breakpoints, highest first
 local TITLE_TIERS = tierRamp(palette.title)  -- PvpTitleAchievement weight, highest first
 
@@ -120,6 +121,12 @@ end
 
 function Util.label(text)
 	return Util.colorize(text, LABEL)
+end
+
+-- A bracket name standing next to its own rating (the compact line), where the label color
+-- would be indistinguishable from an uncolored sub-1750 rating.
+function Util.bracket(text)
+	return Util.colorize(text, BRACKET)
 end
 
 -- The one way to read a string the client handed us. WoW 12.x marks some values "secret"

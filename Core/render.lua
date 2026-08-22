@@ -87,7 +87,7 @@ function Render.buildCompact(record, enabled, leadingBlank, showAllTitles)
 			if row.section == sectionName and enabled(row.key) then
 				local value = Schema.value(row, record)
 				if value then
-					parts[#parts + 1] = Util.label(row.label) .. " " .. value
+					parts[#parts + 1] = Util.bracket(row.label) .. " " .. value
 				end
 			end
 		end

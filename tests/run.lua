@@ -334,6 +334,18 @@ check("compact exp section folded", compactExp ~= nil)
 contains("compact current includes shuffle", compactCur and compactCur.right or "", "2405")
 contains("compact current includes blitz", compactCur and compactCur.right or "", "2115")
 contains("compact shuffle tier-colored", compactCur and compactCur.right or "", ns.Colors.rating[2].color)
+-- Compact folds a bracket name next to its own rating, so the name must not be able to read
+-- as a value: its color differs from the label color and from every rating tier.
+contains("compact bracket name colored", compactCur and compactCur.right or "", ns.Colors.bracket)
+check("compact bracket color differs from the label color", ns.Colors.bracket ~= ns.Colors.label)
+do
+	local clash = false
+	for _, tier in ipairs(ns.Colors.rating) do
+		clash = clash or tier.color == ns.Colors.bracket
+	end
+	check("compact bracket color differs from every rating tier", not clash)
+end
+contains("full keeps label-colored bracket names", curShuffle and curShuffle.left or "", ns.Colors.label)
 check("compact only best title", countKind(compact, "line") == 1)
 local compactText = flatten(compact)
 contains("compact best title is r1", compactText, "Crimson Gladiator: The War Within Season 3")
