@@ -115,7 +115,10 @@ Plus display controls:
 
 ## Coverage and data
 
-- **EU and US** characters who reached at least **1500** rating in any bracket this season (**1800** for Solo Shuffle and Battleground Blitz).
+- **EU and US** characters who reached at least **1500** rating in any bracket this season
+  (**1800** for Solo Shuffle and Battleground Blitz), plus anyone who reached **1800** in any
+  bracket earlier in the expansion — so the database stays useful in the first weeks of a new
+  season, before anyone has re-climbed.
 - Refreshed by new releases, published daily when the ladder changes.
 
 ## How it works
