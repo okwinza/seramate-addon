@@ -1,4 +1,4 @@
-## Interface: 120007
+## Interface: 120007, 120100
 ## Title: Seramate PvP Inspect
 ## Notes: Any player's PvP ratings and notable titles (2v2/3v3/RBG/Shuffle/Blitz) on tooltips, LFG, Battle.net, the guild panel, and a right-click profile link. Data from Seramate's ladder database.
 ## Author: Seramate
