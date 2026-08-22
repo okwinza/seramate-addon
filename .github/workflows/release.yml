@@ -154,8 +154,14 @@ jobs:
           season=$(jq -r '.season' new-manifest.json)
           cutoff=$(jq -r '.cutoff' new-manifest.json)
           solo=$(jq -r '.shuffleCutoff // 1800' new-manifest.json)
+          expansion=$(jq -r '.expansionCutoff // 0' new-manifest.json)
           date=$(jq -r '.generatedAt' new-manifest.json | cut -dT -f1)
-          printf 'Bundled PvP rating snapshot — season %s, updated %s.\n\nRatings and notable titles for **EU and US** characters at **%s+** this season in any bracket (2v2 / 3v3 / RBG / Solo Shuffle / Blitz; **%s+** for the solo queues).\n\nUnzip the three folders into Interface/AddOns/ and reload.\n' "$season" "$date" "$cutoff" "$solo" > notes.md
+          printf 'Bundled PvP rating snapshot — season %s, updated %s.\n\nRatings and notable titles for **EU and US** characters at **%s+** this season in any bracket (2v2 / 3v3 / RBG / Solo Shuffle / Blitz; **%s+** for the solo queues).\n' "$season" "$date" "$cutoff" "$solo" > notes.md
+          # The expansion arm carries the database across a season reset; older manifests omit it.
+          if [ "$expansion" -gt 0 ]; then
+            printf '\nCharacters who reached **%s+** earlier this expansion are included too, so the database stays useful before anyone has re-climbed.\n' "$expansion" >> notes.md
+          fi
+          printf '\nUnzip the three folders into Interface/AddOns/ and reload.\n' >> notes.md
           gh release edit "$TAG" --notes-file notes.md
 
       - name: Attach manifest to the release
