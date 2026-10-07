@@ -29,7 +29,7 @@ Hover any player and Seramate PvP Inspect adds their arena and battleground stan
 <tr><td><b>Notable titles</b></td><td>the character's top titles, colored by prestige tier</td></tr>
 <tr><td><b>Tier-colored ratings</b></td><td>green, blue, purple, and orange, so skill reads at a glance</td></tr>
 <tr><td><b>Last Updated</b></td><td>a freshness date on every tooltip</td></tr>
-<tr><td><b>Profile copy-link</b></td><td>right-click a player to copy their seramate.com profile</td></tr>
+<tr><td><b>Profile copy-link</b></td><td>right-click a player to copy their seramate.com profile or Name-Server</td></tr>
 </table>
 
 Title tiers, low to high:
@@ -69,6 +69,8 @@ the expanded Roster view, where the stock UI shows no tooltip at all.
 ## Copy Seramate Profile
 
 Right-click a player and hit **Copy Profile Link**. The popup opens with their seramate.com URL already selected, and closes itself once you press Ctrl+C.
+
+Want the in-game name instead? Flip the switch at the top of the popup to **Name-Server** (`Seraphita-ArgentDawn`), the form `/w` and `/inv` take. The popup remembers your pick, and the menu entry then reads **Copy Name-Server**.
 
 The entry is in every right-click menu a character has:
 

@@ -1,9 +1,44 @@
 local _, ns = ...
 
--- A small read-only frame holding the profile URL for Ctrl+C (WoW can't write the OS
--- clipboard directly). Auto-closes on Ctrl+C or when it loses focus; also Esc-closable
--- via UISpecialFrames.
+-- A small read-only frame holding the character for Ctrl+C (WoW can't write the OS clipboard
+-- directly), as Name-Server or as the profile URL; a switch on top picks which, and the choice
+-- sticks. Auto-closes on Ctrl+C or when it loses focus; also Esc-closable via UISpecialFrames.
 local copyFrame
+
+local MENU_LABELS = { name = "Copy Name-Server", link = "Copy Profile Link" }
+
+-- Fill the box with the chosen format, preselected for Ctrl+C, and check its radio. Re-checking
+-- on every click matters: a CheckButton toggles itself, so the chosen one would clear.
+local function showFormat(frame)
+	local format = ns.Settings.copyFormat()
+	for buttonFormat, button in pairs(frame.formatButtons) do
+		button:SetChecked(buttonFormat == format)
+	end
+	frame.editBox:SetText(frame.texts[format])
+	frame.editBox:SetCursorPosition(0)
+	frame.editBox:HighlightText()
+	frame.editBox:SetFocus()
+end
+
+-- Radios, not panel buttons: UIPanelButtonTemplate's locked highlight is also its hover look,
+-- so the unchosen button looked chosen under the cursor.
+local function createFormatSwitch(frame)
+	local buttons = {}
+	for index, option in ipairs(ns.Settings.COPY_OPTIONS) do
+		local button = CreateFrame("CheckButton", nil, frame, "UIRadioButtonTemplate")
+		button:SetPoint("TOPLEFT", 100 + (index - 1) * 130, -40)
+		button.text:SetFontObject("GameFontHighlight")
+		button.text:SetText(option.label)
+		-- the label is clickable too
+		button:SetHitRectInsets(0, -(button.text:GetStringWidth() + 5), 0, 0)
+		button:SetScript("OnClick", function()
+			ns.Settings.setCopyFormat(option.format)
+			showFormat(frame)
+		end)
+		buttons[option.format] = button
+	end
+	return buttons
+end
 
 local function ensureCopyFrame()
 	if copyFrame then
@@ -11,7 +46,7 @@ local function ensureCopyFrame()
 	end
 
 	local frame = CreateFrame("Frame", "SeramateCopyFrame", UIParent, "BackdropTemplate")
-	frame:SetSize(420, 96)
+	frame:SetSize(420, 124)
 	frame:SetPoint("CENTER")
 	frame:SetFrameStrata("DIALOG")
 	frame:SetBackdrop({
@@ -29,6 +64,8 @@ local function ensureCopyFrame()
 	local title = frame:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 	title:SetPoint("TOP", 0, -16)
 	title:SetText(ns.Util.header("Seramate Profile") .. " — press Ctrl+C")
+
+	frame.formatButtons = createFormatSwitch(frame)
 
 	local editBox = CreateFrame("EditBox", nil, frame, "InputBoxTemplate")
 	editBox:SetSize(380, 24)
@@ -66,17 +103,26 @@ local function ensureCopyFrame()
 	return frame
 end
 
-local function showCopyFrame(url)
+-- texts: { name = "Name-Server", link = "https://seramate.com/..." }
+local function showCopyFrame(texts)
 	local frame = ensureCopyFrame()
-	frame.editBox:SetText(url)
-	frame.editBox:SetCursorPosition(0)
-	frame.editBox:HighlightText()
+	frame.texts = texts
 	frame:Show()
-	frame.editBox:SetFocus()
+	showFormat(frame)
 end
 
--- Canonicalize + validate a (name, realm) pair into the profile key form, or nil if the name
--- isn't a real character (empty, or a stripped |K…|k substitution token).
+-- Name-Server keeps the realm as the client handed it. Only the URL needs the English display
+-- name: seramate.com 404s on a localized realm (e.g. ruRU "Свежеватель Душ"), while its search
+-- box takes either spelling.
+local function copyTexts(name, realm)
+	return {
+		name = ns.Util.fullName(name, realm),
+		link = ns.Util.profileUrl(ns.region or "eu", name, ns.Keys.resolveRealm(realm)),
+	}
+end
+
+-- Validate a (name, realm) pair, or nil if the name isn't a real character (empty, or a
+-- stripped |K…|k substitution token). An empty realm means the player's own.
 local function finalize(name, realm)
 	name = ns.Util.cleanName(name)
 	if name == "" then
@@ -86,9 +132,7 @@ local function finalize(name, realm)
 	if realm == "" then
 		realm = (type(GetRealmName) == "function") and GetRealmName() or ""
 	end
-	-- Canonicalize to the English display name so the profile URL matches seramate.com
-	-- (a localized realm, e.g. ruRU "Свежеватель Душ", would otherwise 404).
-	return name, ns.Keys.resolveRealm(realm)
+	return name, realm
 end
 
 -- Unit-style menus: the character is in name+server, or on the unit token. Our own callback
@@ -156,8 +200,8 @@ local function addProfileButton(rootDescription, name, realm)
 	-- Queue* API is (cf. TotalRP3 Modules/UnitPopups/UnitPopups.lua).
 	rootDescription:QueueDivider()
 	rootDescription:QueueTitle("Seramate")
-	rootDescription:CreateButton("Copy Profile Link", function()
-		showCopyFrame(ns.Util.profileUrl(ns.region or "eu", name, realm))
+	rootDescription:CreateButton(MENU_LABELS[ns.Settings.copyFormat()], function()
+		showCopyFrame(copyTexts(name, realm))
 	end)
 	rootDescription:ClearQueuedDescriptions()
 end

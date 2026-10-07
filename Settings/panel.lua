@@ -125,6 +125,27 @@ function Settings_.setInstanceMode(mode)
 	SeramateSettings.instance = INSTANCE_MODES[mode] and mode or "inherit"
 end
 
+-- What the right-click copy popup holds. Set by the switch on the popup itself, not this panel.
+local COPY_FORMATS = { name = true, link = true }
+
+Settings_.COPY_OPTIONS = {
+	{ format = "name", label = "Name-Server" },
+	{ format = "link", label = "Seramate Link" },
+}
+
+function Settings_.copyFormat()
+	local format = SeramateSettings and SeramateSettings.copyFormat
+	if COPY_FORMATS[format] then
+		return format
+	end
+	return "link"
+end
+
+function Settings_.setCopyFormat(format)
+	SeramateSettings = SeramateSettings or {}
+	SeramateSettings.copyFormat = COPY_FORMATS[format] and format or "link"
+end
+
 local function makeCheckbox(parent, scope, key)
 	local box = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
 	box:SetSize(24, 24)

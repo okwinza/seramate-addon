@@ -1,5 +1,10 @@
 # Changelog
 
+- Copy a player as Name-Server: a switch on the copy popup flips between the seramate.com
+  link and the character's `Name-Server` (`Seraphita-ArgentDawn`), ready for `/w`, `/inv` or
+  a search box. It remembers your pick, and the right-click entry follows it
+  ("Copy Name-Server").
+
 - Compact layout: bracket names now have their own muted color, so "2v2 1840" reads as a name
   and a rating rather than one run of text — Full is unchanged (the two sit in separate
   columns there). Tune it as "Bracket name" in `tools/tooltip-colors.html`.

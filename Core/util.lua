@@ -212,3 +212,9 @@ function Util.profileUrl(region, name, realmName)
 		Util.urlEncode(name)
 	)
 end
+
+-- "Name-Realm" the way the game writes it (GetNormalizedRealmName drops spaces, hyphens and
+-- periods, keeps apostrophes): what /w and /inv take. seramate.com search accepts it too.
+function Util.fullName(name, realmName)
+	return name .. "-" .. (realmName:gsub("[ %-%.]", ""))
+end

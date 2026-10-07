@@ -92,6 +92,13 @@ local ptUrl = ns.Util.profileUrl("eu", "N", "Aggra (Português)")
 contains("profileUrl utf8 e-circumflex", ptUrl, "%C3%AA")
 contains("profileUrl paren", ptUrl, "%28")
 
+-- ---- Util.fullName (the game's Name-Realm, as /w takes it) ---------------------
+eq("fullName drops spaces", ns.Util.fullName("Xyz", "Tarren Mill"), "Xyz-TarrenMill")
+eq("fullName drops hyphens", ns.Util.fullName("Xyz", "Azjol-Nerub"), "Xyz-AzjolNerub")
+eq("fullName keeps apostrophes", ns.Util.fullName("Xyz", "Twilight's Hammer"), "Xyz-Twilight'sHammer")
+eq("fullName keeps parentheses", ns.Util.fullName("Xyz", "Aggra (Português)"), "Xyz-Aggra(Português)")
+eq("fullName already normalized", ns.Util.fullName("Xyz", "TarrenMill"), "Xyz-TarrenMill")
+
 -- ---- Keys.normalizeRealm -----------------------------------------------------
 eq("normalize spaces", ns.Keys.normalizeRealm("Tarren Mill"), "TarrenMill")
 eq("normalize hyphen", ns.Keys.normalizeRealm("Azjol-Nerub"), "AzjolNerub")
@@ -437,6 +444,16 @@ eq("combat mode sanitizes stored junk", ns.Settings.combatMode(), "inherit")
 SeramateSettings.combat = "show"
 eq("combat mode maps legacy show to inherit", ns.Settings.combatMode(), "inherit")
 
+-- ---- Copy format setting (the switch on the copy popup) ----------------------------
+eq("copy format defaults to the link", ns.Settings.copyFormat(), "link")
+ns.Settings.setCopyFormat("name")
+eq("copy format set name", ns.Settings.copyFormat(), "name")
+ns.Settings.setCopyFormat("garbage")
+eq("copy format rejects unknown values", ns.Settings.copyFormat(), "link")
+SeramateSettings.copyFormat = "junk"
+eq("copy format sanitizes stored junk", ns.Settings.copyFormat(), "link")
+SeramateSettings.copyFormat = nil
+
 -- ---- Render.resolveMode (base layout + combat override) ------------------------
 eq("resolve full ooc", ns.Render.resolveMode(false, "full", "inherit"), "full")
 eq("resolve compact ooc", ns.Render.resolveMode(false, "compact", "inherit"), "compact")
@@ -612,13 +629,26 @@ ns.Settings.set("guild", "surfaces", true)
 -- back to the unit, never link the sentinel — which is what the old `contextData.name ~= ""`
 -- got wrong.
 local lastFrame
+local framesByName = {}
 local function fakeFrame()
 	local frame = { scripts = {} }
 	function frame:SetScript(event, handler) self.scripts[event] = handler end
+	function frame:SetText(text) self.shownText = text end
+	function frame:SetChecked(checked) self.checked = checked end
+	function frame:GetStringWidth() return 0 end
 	-- every other frame method is a no-op returning the frame
 	return setmetatable(frame, { __index = function() return function() return frame end end })
 end
-_G.CreateFrame = function() lastFrame = fakeFrame() return lastFrame end
+_G.CreateFrame = function(_, name, _, template)
+	lastFrame = fakeFrame()
+	if template == "UIRadioButtonTemplate" then
+		lastFrame.text = fakeFrame() -- the template's label FontString
+	end
+	if name then
+		framesByName[name] = lastFrame
+	end
+	return lastFrame
+end
 _G.UISpecialFrames = {}
 _G.tinsert = table.insert
 _G.BNET_CLIENT_WOW = "WoW"
@@ -793,6 +823,38 @@ check("menu lfg secret applicant adds nothing", #menu.buttons == 0 and menu.queu
 
 useSecrets(false)
 ns.Util.profileUrl = realProfileUrl
+
+-- ---- Copy popup: the persistent Name-Server / Seramate Link switch ---------------
+menu = openMenu("MENU_UNIT_PLAYER", { unit = "target", name = "Barplayer", server = "Azjol-Nerub" })
+local copyPopup = framesByName.SeramateCopyFrame
+eq("menu label defaults to the link", menu.buttons[1].text, "Copy Profile Link")
+eq("copy popup opens on the link by default", copyPopup.editBox.shownText,
+	"https://seramate.com/eu/Azjol-Nerub/Barplayer")
+check("copy popup checks the link radio by default",
+	copyPopup.formatButtons.link.checked == true and copyPopup.formatButtons.name.checked == false)
+
+copyPopup.formatButtons.name.scripts.OnClick()
+eq("copy switch shows the name-server", copyPopup.editBox.shownText, "Barplayer-AzjolNerub")
+eq("copy switch persists the choice", ns.Settings.copyFormat(), "name")
+check("copy switch checks only the chosen radio",
+	copyPopup.formatButtons.name.checked == true and copyPopup.formatButtons.link.checked == false)
+-- clicking the already-chosen radio: the client toggles a CheckButton off before OnClick runs
+copyPopup.formatButtons.name.checked = false
+copyPopup.formatButtons.name.scripts.OnClick()
+check("copy re-click keeps the chosen radio checked", copyPopup.formatButtons.name.checked == true)
+
+menu = openMenu("MENU_UNIT_PLAYER", { unit = "target", name = "", server = "" })
+eq("menu label follows the saved format", menu.buttons[1].text, "Copy Name-Server")
+eq("copy popup reopens on the saved format", copyPopup.editBox.shownText, "Fooplayer-TarrenMill")
+
+-- a localized realm: Name-Server keeps the client's spelling, only the URL is canonicalized
+openMenu("MENU_UNIT_BN_FRIEND", bnetContext("BN_FRIEND", "Bnetguy", "Свежеватель Душ"))
+eq("copy name-server keeps a localized realm", copyPopup.editBox.shownText, "Bnetguy-СвежевательДуш")
+copyPopup.formatButtons.link.scripts.OnClick()
+eq("copy link canonicalizes a localized realm", copyPopup.editBox.shownText,
+	"https://seramate.com/eu/Soulflayer/Bnetguy")
+eq("copy switch back persists the link", ns.Settings.copyFormat(), "link")
+SeramateSettings.copyFormat = nil
 
 -- ---- summary -----------------------------------------------------------------
 print(string.format("\n%d passed, %d failed", passed, failed))
